@@ -38,12 +38,13 @@ res_var  = c(sum((fit1$residuals)^2), sum((fit2$residuals)^2), sum((fit3$residua
 diagD_hat = diag(res_var)
 diagD_hat
 # covariance matrix by single factor model
-Y = cbind(EX_R_msft[-1,], EX_R_ge[-1,], EX_R_ford[-1,])
-cov_factor = var(Y)*t(b_hat)%*%b_hat + diag(diagD_hat) 
+Y = EX_R_sp500[-1,]
+cov_factor = as.numeric(var(Y))*t(b_hat)%*%b_hat + diag(diagD_hat) 
 cov_factor
 #---------------------------------------------------------------------------
 # You can also use OLS formula: beta=inv(X'X)X'Y to get the estimated beta
 #---------------------------------------------------------------------------
+n = dim(EX_R_sp500)[1]
 ones = rep(1,n)
 X = cbind(ones, EX_R_sp500)
 X = as.matrix(X[-1,])
@@ -59,6 +60,7 @@ res_var.1 = diag(t(E_hat)%*%E_hat)/((n-1)-2)
 diagD_hat.1 = diag(res_var.1)
 diagD_hat.1
 # covariance matrix by single factor model
-cov_factor.1 = var(Y)*t(b_hat)%*%b_hat + diag(diagD_hat) 
+
+cov_factor.1 = as.numeric(var(EX_R_sp500[-1,]))*t(b_hat)%*%b_hat + diag(diagD_hat) 
 cov_factor.1 
 cov_factor
