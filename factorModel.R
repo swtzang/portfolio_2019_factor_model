@@ -15,6 +15,8 @@ library(ellipse)
 library(fEcofin)                # various data sets
 library(PerformanceAnalytics)   # performance and risk analysis functions
 library(zoo)
+library(readxl)
+library(writexl)
 
 ################################################################################
 # Macroeconomic Factor Models
@@ -25,20 +27,22 @@ library(zoo)
 ##
 
 # load Berndt Data
-data(berndtInvest)
-str(berndtInvest)
-
+#data(berndtInvest)
+?read_excel
+retdata = read_excel("berndt.xlsx")
+retdata
+str(retdata)
 # create data frame with dates as rownames
-berndt.df = berndtInvest[, -1]
-rownames(berndt.df) = as.character(berndtInvest[, 1])
-colnames(berndt.df)
+# berndt.df = retdata[, -1]
+#rownames(berndt.df) = as.character(berndtInvest[, 1])
+#colnames(berndt.df)
 
 ##
 ## use multivariate regression and matrix algebra
 ##
 
-returns.mat = as.matrix(berndt.df[, c(-10, -17)])
-market.mat = as.matrix(berndt.df[,10, drop=F])
+returns.mat = as.matrix(retdata[, c(-1,-11, -18)])
+market.mat = as.matrix(retdata[,11, drop=F])
 n.obs = nrow(returns.mat)
 X.mat = cbind(rep(1,n.obs),market.mat)
 colnames(X.mat)[1] = "intercept"
@@ -53,7 +57,7 @@ diagD.hat = diag(crossprod(E.hat)/(n.obs-2))
 # compute R2 values from multivariate regression
 sumSquares = apply(returns.mat, 2, function(x) {sum( (x - mean(x))^2 )})
 R.square = 1 - (n.obs-2)*diagD.hat/sumSquares
-
+R.square
 # print and plot results
 cbind(beta.hat, diagD.hat, R.square)
 
@@ -70,12 +74,6 @@ rownames(cor.si) = colnames(cor.si)
 ord <- order(cor.si[1,])
 ordered.cor.si <- cor.si[ord, ord]
 plotcorr(ordered.cor.si, col=cm.colors(11)[5*ordered.cor.si + 6])
-# compare to sample correlation matrix
-cor.sample = cor(returns.mat)
-ord <- order(cor.sample[1,])
-ordered.cor.sample <- cor.sample[ord, ord]
-plotcorr(ordered.cor.sample, col=cm.colors(11)[5*ordered.cor.sample + 6])
-
 # compute global min variance portfolio
 # use single index covariance
 w.gmin.si = solve(cov.si)%*%rep(1,nrow(cov.si))
@@ -111,8 +109,9 @@ asset.names
 reg.list = list()
 
 # loop over all assets and estimate time series regression
+i = "CITCRP"
 for (i in asset.names) {
-  reg.df = berndt.df[, c(i, "MARKET")]
+  reg.df = retdata[, c(i, "MARKET")]
   si.formula = as.formula(paste(i,"~", "MARKET", sep=" "))
   reg.list[[i]] = lm(si.formula, data=reg.df)
 }
@@ -125,13 +124,15 @@ summary(reg.list$CITCRP)
 
 # plot actual vs. fitted over time
 # use chart.TimeSeries() function from PerformanceAnalytics package
-dataToPlot = cbind(fitted(reg.list$CITCRP), berndt.df$CITCRP)
+dataToPlot = cbind(fitted(reg.list$CITCRP), retdata$CITCRP)
 colnames(dataToPlot) = c("Fitted","Actual")
-chart.TimeSeries(dataToPlot, main="Single Index Model for CITCRP",
+dataToPlot.xts<-as.xts(dataToPlot, order.by = retdata$date)
+chart.TimeSeries(dataToPlot.xts, main="Single Index Model for CITCRP",
                  colorset=c("black","blue"), legend.loc="bottomleft")
 
+
 # scatterplot of the single index model regression
-plot(berndt.df$MARKET, berndt.df$CITCRP, main="SI model for CITCRP",
+plot(retdata$MARKET, retdata$CITCRP, main="SI model for CITCRP",
      type="p", pch=16, col="blue",
      xlab="MARKET", ylab="CITCRP")
 abline(h=0, v=0)
@@ -189,30 +190,28 @@ colSums(B.mat)
 
 # returns.mat is T x N matrix, and fundamental factor model treats R as N x T.
 returns.mat = t(returns.mat)
-# multivariate OLS regression to estimate K x T matrix of factor returns  (K=3)
+# Step 1: Estimate OLS F.hat ----
+  # multivariate OLS regression to estimate K x T matrix of factor returns  (K=3)
 F.hat = solve(crossprod(B.mat))%*%t(B.mat)%*%returns.mat
-# rows of F.hat are time series of estimated industry factors
-F.hat
+  # rows of F.hat are time series of estimated industry factors (K X T)
+F.hat.df<-data.frame(t(F.hat))
+F.hat.df$date<-as.Date(retdata$date)
+#
+library(reshape2)
+  # plot muliple time series using ggplot 
+F.hat.df %>% melt("date") %>% 
+  ggplot(aes(x = date, y = value, group=variable,color=variable)) +
+    geom_line() +
+    scale_x_date()
 
-# plot industry factors in separate panels - convert to zoo objects for plotting
-F.hat.zoo = zoo(t(F.hat), as.Date(colnames(F.hat)))
-head(F.hat.zoo)
-
-# panel function to put horizontal lines at zero in each panel
-my.panel <- function(...) {
-  lines(...)
-  abline(h=0)
-}
-plot(F.hat.zoo, main="OLS estimates of industry factors",
-     panel=my.panel, lwd=2, col="blue")
-
-
-# compute N x T matrix of industry factor model residuals
+# Compute residual variance from OLS regression ---- 
+  # compute N x T matrix of industry factor model residuals
 E.hat = returns.mat - B.mat%*%F.hat
-# compute residual variances from time series of errors
+  # compute residual variances from time series of errors
 diagD.hat = apply(E.hat, 1, var)
 Dinv.hat = diag(diagD.hat^(-1))
-# multivariate FGLS regression to estimate K x T matrix of factor returns
+
+# Step 2: Run multivariate FGLS regression to estimate K x T matrix of factor returns ----
 H.hat = solve(t(B.mat)%*%Dinv.hat%*%B.mat)%*%t(B.mat)%*%Dinv.hat
 colnames(H.hat) = asset.names
 # note: rows of H sum to one so are weights in factor mimicking portfolios

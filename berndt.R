@@ -1,6 +1,6 @@
-#========================================
-# multifactor model
-#========================================
+# Multifactor Model ====
+# 
+#
 rm(list=ls())
 #setwd("D:/亞洲大學上課資料/Portfolio management 2016 Fall")
 retdata = read.csv('berndt.csv')
@@ -23,7 +23,7 @@ b_hat = solve(t(X)%*%X)%*%t(X)%*%retdata1
 E_hat = retdata1 - X%*%b_hat
 diagD_hat = diag(t(E_hat)%*%E_hat)/(t-2)
 
-#R-square
+#R-square ----
 retvar = apply(retdata1,2,var) 
 R_2 = 1 - diag(t(E_hat)%*%E_hat)/((t-1)*retvar)
 res_std = sqrt(diagD_hat)
@@ -38,6 +38,21 @@ one.vec = rep(1,15)
 a = solve(cov_factor)%*%one.vec
 b = t(one.vec)%*%a
 mvp.w =a / as.numeric(b)
-as.vector(mvp.w, names = rownames(mvp.w))
+#as.vector(mvp.w, names = rownames(mvp.w))
 barplot(as.vector(mvp.w), ylim = c(-0.01, 0.4), names.arg = rownames(mvp.w), cex.names = 0.5)
+# ggplot2
+library(ggplot2)
+library(tidyverse)
+#
+tickers<-rownames(mvp.w)
+weighti<-as.numeric(mvp.w)
+mvp.w.df<-data.frame(tickers, weighti)
+#
+mvp.w.df %>% 
+  ggplot(aes(tickers, weighti)) +
+  geom_bar(stat = "identity")
+
+
+
+
 
