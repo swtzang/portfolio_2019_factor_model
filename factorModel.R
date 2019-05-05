@@ -198,12 +198,15 @@ F.hat.df<-data.frame(t(F.hat))
 F.hat.df$date<-as.Date(retdata$date)
 #
 library(reshape2)
+library(tidyverse)
+
   # plot muliple time series using ggplot 
-F.hat.df %>% melt("date") %>% 
+          
+p<-F.hat.df %>% melt("date") %>% 
   ggplot(aes(x = date, y = value, group=variable,color=variable)) +
     geom_line() +
     scale_x_date()
-
+p
 # Compute residual variance from OLS regression ---- 
   # compute N x T matrix of industry factor model residuals
 E.hat = returns.mat - B.mat%*%F.hat
@@ -221,7 +224,7 @@ t(H.hat)
 colSums(t(H.hat))
 
 # compare OLS and GLS fits
-F.hat.gls.zoo = zoo(t(F.hat.gls), as.Date(colnames(F.hat.gls)))
+F.hat.gls.zoo = zoo(t(F.hat.gls), as.Date(retdata$date))
 par(mfrow=c(3,1))
 plot(merge(F.hat.zoo[,1], F.hat.gls.zoo[,1]), plot.type="single",
      main = "OLS and GLS estimates of TECH factor",
