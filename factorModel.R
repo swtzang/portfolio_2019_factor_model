@@ -12,11 +12,13 @@ options(width = 70, digits=4)
 
 # load required packages
 library(ellipse)
-library(fEcofin)                # various data sets
+#library(fEcofin)                # various data sets
 library(PerformanceAnalytics)   # performance and risk analysis functions
 library(zoo)
 library(readxl)
 library(writexl)
+library(tidyverse)
+library(reshape2)
 
 ################################################################################
 # Macroeconomic Factor Models
@@ -27,10 +29,10 @@ library(writexl)
 ##
 
 # load Berndt Data
-#data(berndtInvest)
-?read_excel
+# 18 variables with 120 monthly return observations starting from 1978/01 thru 1987/12
+# First column is date. Column 10th and 18th variables are market return and risk-free rate
 retdata = read_excel("berndt.xlsx")
-retdata
+retdata %>% glimpse()
 str(retdata)
 # create data frame with dates as rownames
 # berndt.df = retdata[, -1]
@@ -40,7 +42,6 @@ str(retdata)
 ##
 ## use multivariate regression and matrix algebra
 ##
-
 returns.mat = as.matrix(retdata[, c(-1,-11, -18)])
 market.mat = as.matrix(retdata[,11, drop=F])
 n.obs = nrow(returns.mat)
@@ -124,12 +125,12 @@ summary(reg.list$CITCRP)
 
 # plot actual vs. fitted over time
 # use chart.TimeSeries() function from PerformanceAnalytics package
+library(tidyverse)
 dataToPlot = cbind(fitted(reg.list$CITCRP), retdata$CITCRP)
 colnames(dataToPlot) = c("Fitted","Actual")
 dataToPlot.xts<-as.xts(dataToPlot, order.by = retdata$date)
 chart.TimeSeries(dataToPlot.xts, main="Single Index Model for CITCRP",
                  colorset=c("black","blue"), legend.loc="bottomleft")
-
 
 # scatterplot of the single index model regression
 plot(retdata$MARKET, retdata$CITCRP, main="SI model for CITCRP",
@@ -185,28 +186,38 @@ other.dum = 1 - tech.dum - oil.dum
 B.mat = cbind(tech.dum,oil.dum,other.dum)
 colnames(B.mat) = c("TECH","OIL","OTHER")
 # show the factor sensitivity matrix
-B.mat
+B.mat %>% glimpse()
 colSums(B.mat)
 
 # returns.mat is T x N matrix, and fundamental factor model treats R as N x T.
+dim(returns.mat)
 returns.mat = t(returns.mat)
+dim(returns.mat)
 # Step 1: Estimate OLS F.hat ----
   # multivariate OLS regression to estimate K x T matrix of factor returns  (K=3)
 F.hat = solve(crossprod(B.mat))%*%t(B.mat)%*%returns.mat
   # rows of F.hat are time series of estimated industry factors (K X T)
 F.hat.df<-data.frame(t(F.hat))
 F.hat.df$date<-as.Date(retdata$date)
+glimpse(F.hat.df)
 #
-library(reshape2)
-library(tidyverse)
 
-  # plot muliple time series using ggplot 
+# plot muliple time series using ggplot 
           
 p<-F.hat.df %>% melt("date") %>% 
-  ggplot(aes(x = date, y = value, group=variable,color=variable)) +
+  ggplot(aes(x = date, y = value, group=variable, color=variable)) +
     geom_line() +
     scale_x_date()
 p
+
+#
+p1<-F.hat.df %>% melt("date") %>% 
+  ggplot(aes(x = date, y = value)) +
+  geom_line() +
+  scale_x_date()+
+  facet_wrap(~variable, ncol = 1)
+p1
+
 # Compute residual variance from OLS regression ---- 
   # compute N x T matrix of industry factor model residuals
 E.hat = returns.mat - B.mat%*%F.hat
@@ -222,30 +233,52 @@ F.hat.gls = H.hat%*%returns.mat
 # show gls factor weights
 t(H.hat)
 colSums(t(H.hat))
+# compute Eg
+E.hat.gls = returns.mat - B.mat%*%F.hat.gls
+diagD.hat.gls = apply(E.hat.gls, 1, var)
+
+# My edition ----
+# compute sample covariance matrix of estimated factors (my edition)
+cov.ind.gls = B.mat%*%var(t(F.hat.gls))%*%t(B.mat) + diag(diagD.hat.gls)
+cor.ind.gls = cov2cor(cov.ind.gls)
+
+# plot correlations using plotcorr() from ellipse package
+rownames(cor.ind.gls) = colnames(cor.ind.gls)
+ord.gls <- order(cor.ind.gls[1,])
+ordered.cor.ind <- cor.ind[ord.gls, ord.gls]
+plotcorr(ordered.cor.ind, col=cm.colors(11)[5*ordered.cor.ind + 6])
+#
+# compute global minimum variance portfolio
+w.gmin.ind.gls = solve(cov.ind.gls)%*%rep(1,nrow(cov.ind.gls))
+w.gmin.ind.gls = w.gmin.ind.gls/sum(w.gmin.ind.gls)
+t(w.gmin.ind.gls)
+
+# end of my edition -------------------------
 
 # compare OLS and GLS fits
+F.hat.zoo = zoo(t(F.hat), as.Date(retdata$date))
 F.hat.gls.zoo = zoo(t(F.hat.gls), as.Date(retdata$date))
 par(mfrow=c(3,1))
 plot(merge(F.hat.zoo[,1], F.hat.gls.zoo[,1]), plot.type="single",
      main = "OLS and GLS estimates of TECH factor",
-     col=c("black", "blue"), lwd=2, ylab="Return")
+     col=c("red", "blue"), lwd=2, ylab="Return")
 legend(x = "bottomleft", legend=c("OLS", "GLS"), col=c("black", "blue"), lwd=2)
 abline(h=0)
 
 plot(merge(F.hat.zoo[,2], F.hat.gls.zoo[,2]), plot.type="single",
      main = "OLS and GLS estimates of OIL factor",
-     col=c("black", "blue"), lwd=2, ylab="Return")
+     col=c("red", "blue"), lwd=2, ylab="Return")
 legend(x = "bottomleft", legend=c("OLS", "GLS"), col=c("black", "blue"), lwd=2)
 abline(h=0)
 
 plot(merge(F.hat.zoo[,3], F.hat.gls.zoo[,3]), plot.type="single",
      main = "OLS and GLS estimates of OTHER factor",
-     col=c("black", "blue"), lwd=2, ylab="Return")
+     col=c("red", "blue"), lwd=2, ylab="Return")
 legend(x = "bottomleft", legend=c("OLS", "GLS"), col=c("black", "blue"), lwd=2)
 abline(h=0)
 par(mfrow=c(1,1))
 
-# compute sample covariance matrix of estimated factors
+# compute sample covariance matrix of estimated factors (Zivot edition)
 
 cov.ind = B.mat%*%var(t(F.hat.gls))%*%t(B.mat) + diag(diagD.hat)
 cor.ind = cov2cor(cov.ind)
@@ -282,13 +315,13 @@ cbind(mu.gmin.sample,mu.gmin.sample, sd.gmin.ind, sd.gmin.sample)
 ################################################################################
 
 # continue to use Berndt data
-returns.mat = as.matrix(berndt.df[, c(-10, -17)])
+returns.mat<-retdata %>% select(c(-1,-11, -18)) %>% 
+              as.matrix()
 
-#
 # Traditional factor analysis
-#
 
-#
+
+
 # principal component analysis
 #
 
