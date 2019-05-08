@@ -97,11 +97,12 @@ frontier <- function(return, Q) {
 
 #===============================================================
 # Use different covariance matrix to plot efficient frontier: Q
-# ?N?J???P?@?ܲ??Ưx?}?A?N?i?H?e?Xefficient frontier
+# 
 #================================================================
 #return = retdata1
 Q.3f = cov_3f
 Q.1f = cov_1f
+retdata1
 Q = cov(retdata1)
 
 #========================================
@@ -110,27 +111,32 @@ Q = cov(retdata1)
 xy.3f = frontier(retdata1, Q.3f)
 xy.1f = frontier(retdata1, Q.1f)
 xy    = frontier(retdata1, Q)
-plot(xy.3f$sd, xy.3f$er, type="l",col="red")
+#
+#xx<-c(xy$sd, xy.1f$sd, xy.3f$sd)
+#yy<-c(xy$er, xy.1f$er, xy.3f$er)
+#type<-rep(c("hist", "1.factor", "3.factor"), c(100,100,100))
+#xy.all<-data.frame(xx, yy, type)
+#head(xy.all)
+
+#
+#library(lattice)
+#xyplot(yy ~ xx, xy.all, groups = xy.all$type, pch= 20)
+#ggplot(xy.all, aes(x = xx, y = yy, colour = type))+
+#  geom_line(type)
+
+#plot(xx, yy)
+
+plot(xy$sd, xy$er, type = 'l', col="red")
 lines(xy.1f$sd, xy.1f$er, col = "green")
-lines(xy$sd, xy$er, col="black")
-
-all = data.frame(xy$sd, xy.1f$sd, xy.3f$sd, xy$er)
-write.csv(all, 'D:/?Ȭw?j?ǤW?Ҹ???/Portfolio management 2015 Fall/all.csv')
-
+lines(xy.3f$sd, xy.3f$er, col = "red")
 #==========================================================================
 # Another way to draw overlay frontiers on the same graph
 # Ref: http://www.sixhat.net/plotting-multiple-data-series-in-r.html
 #==========================================================================
 plot(xy.3f$sd, xy.3f$er, type="l",col="red", xlab="risk", ylab="return")
 par(new=TRUE)
-plot(xy.1f$sd, xy.1f$er, axes=F, type="l",col="green", xlab="", ylab="")
+plot(xy.1f$sd, xy.1f$er, axes=F, type="l",col="blue", xlab="", ylab="")
 par(new=TRUE)
 plot(xy$sd, xy$er, axes=F, type="l",col="black",  xlab="", ylab="")
-
 #text(locator(), labels = c("red line", "black line)"))
-
-
-
-
-
 
