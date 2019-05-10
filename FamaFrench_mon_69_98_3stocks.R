@@ -48,7 +48,9 @@ cov_1f.1
 #============================
 stock.rets<-retdata %>% select(c(2,3,4,6,7,8))/100
 fit3 = lm(formula = cbind(ge, ibm, mobil)~Mkt_RF + SMB + HML, data=stock.rets)
-sigF3 = as.matrix(var(cbind(Mkt.RF, SMB, HML)))
+sigF3 = as.matrix(var(cbind(stock.rets$Mkt_RF, 
+                            stock.rets$SMB, 
+                            stock.rets$HML)))
 bbeta3 = as.matrix(fit3$coefficients)
 bbeta3 = bbeta3[-1,]
 bbeta3
@@ -66,7 +68,7 @@ b_hat.3 = as.matrix(b_hat.3[-1,])
 diagD_hat.3 = diag(t(E_hat.3)%*%E_hat.3)/(N-4)
 cov_3f.3 = t(b_hat.3)*sigF3*b_hat.3 + diag(diagD_hat.3) 
 cov_3f.3
-
+cov_3f
 
 #======================================================
 # Create frontier function to plot efficient frontier
@@ -111,13 +113,25 @@ Q = cov(retdata1)
 xy.3f = frontier(retdata1, Q.3f)
 xy.1f = frontier(retdata1, Q.1f)
 xy    = frontier(retdata1, Q)
-#
-#xx<-c(xy$sd, xy.1f$sd, xy.3f$sd)
-#yy<-c(xy$er, xy.1f$er, xy.3f$er)
-#type<-rep(c("hist", "1.factor", "3.factor"), c(100,100,100))
-#xy.all<-data.frame(xx, yy, type)
-#head(xy.all)
 
+# convert to tibble and rename column names
+
+xx<-cbind(xy$sd, xy.1f$sd, xy.3f$sd) %>% 
+    as.tibble() %>% 
+    rename(s = V1,  s1 = V2, s3 = V3) 
+
+yy<-cbind(xy$er, xy.1f$er, xy.3f$er) %>% 
+    as.tibble() %>% 
+    rename(er = V1, er1 = V2, er3 = V3)
+
+xy.all<-bind_cols(xx, yy)
+xy.all
+class(xy.all) 
+melt(xy.all)
+#type<-rep(c("hist", "1.factor", "3.factor"), c(100,100,100))
+#xy.all<-data.frame(xx, yy)
+#head(xy.all)
+#write_csv(xy.all, "xy_all.csv")
 #
 #library(lattice)
 #xyplot(yy ~ xx, xy.all, groups = xy.all$type, pch= 20)
@@ -126,17 +140,21 @@ xy    = frontier(retdata1, Q)
 
 #plot(xx, yy)
 
-plot(xy$sd, xy$er, type = 'l', col="red")
-lines(xy.1f$sd, xy.1f$er, col = "green")
-lines(xy.3f$sd, xy.3f$er, col = "red")
-#==========================================================================
-# Another way to draw overlay frontiers on the same graph
-# Ref: http://www.sixhat.net/plotting-multiple-data-series-in-r.html
-#==========================================================================
-plot(xy.3f$sd, xy.3f$er, type="l",col="red", xlab="risk", ylab="return")
-par(new=TRUE)
-plot(xy.1f$sd, xy.1f$er, axes=F, type="l",col="blue", xlab="", ylab="")
-par(new=TRUE)
-plot(xy$sd, xy$er, axes=F, type="l",col="black",  xlab="", ylab="")
-#text(locator(), labels = c("red line", "black line)"))
+# using plot 
+plot(xy$sd, xy$er, type = 'l', col="red", xlim = c(0.03, 0.07))
+lines(xy.1f$sd, xy.1f$er, col = "blue")
+lines(xy.3f$sd, xy.3f$er, col = "black")
+# using ggplot
+ggplot(data = xy.all, aes(x = s, y = er)) +
+  geom_point(color = "red", size = 0.3) +
+  annotate(geom="text", x=0.045, y=0.0125, label="historical covariance",
+           color="red", size= 4)+
+  geom_point(aes(x = s1, y = er1), color = "blue", size = 0.3, shape = 2)+
+  annotate(geom="text", x=0.058, y=0.013, label="capm covariance",
+           color="blue", size= 4)+
+  geom_point(aes(x = s3, y = er3), color = "black", size = 0.3, shape = 4)+
+  annotate(geom="text", x=0.045, y=0.0145, label="FF3F covariance",
+           color="black", size= 4)+
+  labs(title="Efficient Frontiers ", x="sd", y="ret")
+
 
