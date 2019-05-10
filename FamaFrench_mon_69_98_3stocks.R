@@ -6,7 +6,7 @@
 library(tidyverse)
 retdata = read_csv('FamaFrench_mon_69_98_3stocks.csv')
 glimpse(retdata)
-colnames(retdata)[2]<- 'Mkt_RF'
+colnames(retdata)[2]<- 'Mkt_RF'# Replace 'Mkt-RF' with 'Mkt_RF'; 
 # attach(retdata)
 #Below we use two different approaches to estimate covariance matrix 
 #===========================================================
