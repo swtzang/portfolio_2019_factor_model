@@ -7,6 +7,7 @@ library(quantmod)
 library(tidyquant)
 library(dplyr)
 library(tidyverse)
+library(XLConnect)
 #
 tq_exchange_options() # find all exchanges available
 #
@@ -27,7 +28,7 @@ glimpse(nasdaq)
 stocks.selection <- sp500 %>% 
   inner_join(rbind(nyse, nasdaq) %>% 
                select(symbol, last.sale.price, market.cap, ipo.year), by=c("symbol")) %>% # join datasets
-  filter(ipo.year<2000 & !is.na(market.cap)) %>% # filter years with ipo<2000 or ipo=NA
+  filter(ipo.year<2000 & !is.na(market.cap)) %>% # filter years with ipo<2000 or ipo=NA and available market cap
   arrange(desc(weight)) %>% # sort in descending order
   slice(1:10)
 
@@ -65,6 +66,8 @@ stocks.prices.monthly <- stocks.prices %>%
                indexAt = "lastof") %>%      # ‘yearmon’, ‘yearqtr’, ‘firstof’, ‘lastof’, ‘startof’, or ‘endof’
   ungroup() %>% mutate(date=as.yearmon(date))
 #
+stocks.prices.monthly
+#
 stocks.returns <- stocks.prices %>% 
   tq_transmute(select = adjusted,
                mutate_fun = periodReturn,   # create monthly  returns
@@ -75,6 +78,8 @@ stocks.returns <- stocks.prices %>%
   mutate(mret = scales::percent(mret)) %>% 
   ungroup() %>% mutate(date=as.yearmon(date)) 
 #
+stocks.returns
+#
 index.returns <- index.prices %>% 
   tq_transmute(select = adjusted,
                mutate_fun = periodReturn, 
@@ -83,11 +88,12 @@ index.returns <- index.prices %>%
                col_rename = 'indexret') %>% 
   mutate(date=as.yearmon(date), 
          indexret = scales::percent(indexret))
-
+#
+index.returns
 # Fama-French Data (Kenneth French’s Data Library)
 install.packages("remotes")
-#remotes::install_github("sstoeckl/ffdownload")
-devtools::install_bitbucket("sstoeckl/FFdownload")
+remotes::install_github("sstoeckl/ffdownload")
+#devtools::install_bitbucket("sstoeckl/FFdownload")
 #devtools::install_github("sstoeckl/ffdownload", force = TRUE)
 #
 library(FFdownload)
@@ -96,7 +102,8 @@ FFdownload(output_file = "FFdata.RData", # output file for the final dataset
            exclude_daily = TRUE, # exclude daily data
            download = FALSE) # if false, data already in the temp-directory will be used
 #
-load(file = "FFdata.RData")
+#load(file = "FFdata.RData")
+FFdownload <- source('ffdata.rds')
 # Extract FF3F monthly returns
 library(timetk)
 factors <- FFdownload$`x_F-F_Research_Data_Factors`$monthly$Temp2 %>% 
