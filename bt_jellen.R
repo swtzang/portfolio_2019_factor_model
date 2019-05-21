@@ -122,7 +122,7 @@ factors.returns <- factors %>%
   mutate(date=as.yearmon(date))
   
 factors.returns
-#
+#===============================================
 stocks.prices.monthly %>% ungroup() %>% 
   slice(1:5) # show first 5 entries
 #
@@ -132,51 +132,61 @@ index.returns %>% ungroup() %>% slice(1:5)
 # convert factors.returns to wide format----
 factors.returns %>% slice(1:5)
                      
-#stocks.ratios <- stocks.selection$symbol %>% 
-#                 tq_get(get  = "key.ratios",from = "2000-01-01",to = "2017-12-31") %>%
-#                 group_by(symbol)
 # merge all data 
-
 # convert factors.returns to wide format----
 factors.returns.w <- factors.returns %>% 
                      spread(key = FFvar, value = ffret)
 # convert to wide format
+stocks.prices.monthly.w <- stocks.prices.monthly %>% 
+                           select(-volume) %>% 
+                           spread(symbol, value = adjusted)
+#
 stocks.returns.w <- stocks.returns %>% spread(symbol, value = month_ret)
-                    
+stocks.returns.w                    
 #
 all.ret.merge <- stocks.returns.w %>% left_join(index.returns, by = 'date') %>% 
                  left_join(factors.returns.w, by = 'date')
 all.ret.merge
 # merge price, return, volume with symbols in the first column
-all.merge <- stocks.prices.monthly %>% bind_cols(stocks.returns) %>%
+stocks.final <- stocks.prices.monthly %>% bind_cols(stocks.returns) %>%
                           left_join(index.returns, by = 'date') %>% 
                           left_join(factors.returns.w, by = c("date" = "date")) %>% 
                           select(-date1, -symbol1) %>% 
                           dplyr::rename(return = month_ret, sp500 = indexret)
-all.merge 
+stocks.final 
+#
+stocks.final %>% group_by(symbol) %>%
+                 mutate(date=as.Date(date,frac=1)) %>% 
+                 tq_mutate(select     = adjusted, 
+                           mutate_fun = MACD, 
+                           col_rename = c("MACD", "Signal")) %>%
+                 select(symbol,date,adjusted,MACD,Signal) 
+                 #tail() # show last part of the dataset
+#
+save(stocks.final, file="stocks.RData")
+#
+#regr_fun <- function(data){coef(lm(fb.returns ~ xlk.returns, data = timetk::tk_tbl(data, silent = TRUE)))}
+#returns_combined %>% tq_mutate(mutate_fun = rollapply, width = 12, 
+                               FUN = regr_fun, by.column = FALSE, col_rename = c('coef.0', 'coef.1'))
 
 
 #==========================================================
-tickers = c('AMZN', 'GOOG', 'MSFT', 'JNJ', 'JPM')
+stock.10ret <- stocks.returns.w %>% 
+               mutate(date=as.Date(date,frac=1)) %>% 
+               tk_xts(date_var = date) # convert from tibble into xts 
 
-data <- new.env()
-getSymbols(tickers, src = 'yahoo', from = '1980-01-01', env = data, auto.assign = T)
-for(i in ls(data)) data[[i]] = adjustOHLC(data[[i]], use.Adjusted=T)
-
-data %>% ls() 
-data$AMZN
-
-
-SPDR.returns <- na.omit((SPDR / lag(SPDR, k= 1) - 1) * 100)
-
-###########################################################################
-############# Plot the underlying SPDR assets #############################
-###########################################################################
-nrAssets <- ncol(SPDR)
+stock.10price <- stocks.prices.monthly.w %>% 
+                 mutate(date=as.Date(date,frac=1)) %>% 
+                 tk_xts(date_var = date) # convert from tibble into xts 
+###########################################################
+# Plot the underlying SPDR assets #
+##########################################################
+nrAssets <- ncol(stock.10price)
 par(mfrow=c(rep(ceiling(sqrt(nrAssets)),2)))
-res <- sapply(1:nrAssets, function(x) plot(time(SPDR[,x]),
-                                           coredata(SPDR[,x]), main=names(SPDR)[x],type="l",
-                                           xlab="Time",ylab="Price"))
+res <- sapply(1:nrAssets, function(x) plot(time(stock.10price[,x]),
+              coredata(stock.10price[,x]), 
+              main=names(stock.10price)[x],type="l",
+              xlab="Time",ylab="Price"))
 
 
 ## gmv optimization
