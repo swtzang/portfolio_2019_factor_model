@@ -73,9 +73,9 @@ stocks.returns <- stocks.prices %>%
                mutate_fun = periodReturn,   # create monthly  returns
                period="monthly", 
                type="arithmetic", 
-               col_rename = 'mret'
+               col_rename = 'month_ret'
   ) %>% 
-  mutate(mret = scales::percent(mret)) %>% 
+  #mutate(mret = scales::percent(mret)) %>% 
   ungroup() %>% mutate(date=as.yearmon(date)) 
 #
 stocks.returns
@@ -86,10 +86,10 @@ index.returns <- index.prices %>%
                period="monthly", 
                type="arithmetic", 
                col_rename = 'indexret') %>% 
-  mutate(date=as.yearmon(date), 
-         indexret = scales::percent(indexret))
+  mutate(date=as.yearmon(date))
 #
 index.returns
+#--------------------------------------------------
 # Fama-French Data (Kenneth French’s Data Library)
 install.packages("remotes")
 remotes::install_github("sstoeckl/ffdownload")
@@ -102,8 +102,8 @@ FFdownload(output_file = "FFdata.RData", # output file for the final dataset
            exclude_daily = TRUE, # exclude daily data
            download = FALSE) # if false, data already in the temp-directory will be used
 #
-#load(file = "FFdata.RData")
-FFdownload <- source('ffdata.rds')
+load(file = "FFdata.RData")
+#FFdownload <- source('ffdata.rds')
 # Extract FF3F monthly returns
 library(timetk)
 factors <- FFdownload$`x_F-F_Research_Data_Factors`$monthly$Temp2 %>% 
@@ -113,17 +113,50 @@ factors <- FFdownload$`x_F-F_Research_Data_Factors`$monthly$Temp2 %>%
   mutate(date=as.Date(date, frac=1)) %>% # make proper month-end date format
   gather(key=FFvar, value = price, -date) # gather into tidy format
 
-factors %>% group_by(FFvar) %>% slice(1:2)
+factors %>% group_by(FFvar) %>% slice(1:2) %>% ungroup()
 
 #
 factors.returns <- factors %>% 
-  mutate(price=price/100) %>%  # already is monthly
-  mutate(date=as.yearmon(date)) 
+  mutate(ffret=price/100) %>%  # already is monthly
+  select(-price) %>% 
+  mutate(date=as.yearmon(date))
+  
+factors.returns
 #
 stocks.prices.monthly %>% ungroup() %>% 
   slice(1:5) # show first 5 entries
-
 #
+stocks.returns %>% arrange(-desc(symbol)) %>% ungroup() %>% slice(1:5) 
+#
+index.returns %>% ungroup() %>% slice(1:5)  
+# convert factors.returns to wide format----
+factors.returns %>% slice(1:5)
+                     
+#stocks.ratios <- stocks.selection$symbol %>% 
+#                 tq_get(get  = "key.ratios",from = "2000-01-01",to = "2017-12-31") %>%
+#                 group_by(symbol)
+# merge all data 
+
+# convert factors.returns to wide format----
+factors.returns.w <- factors.returns %>% 
+                     spread(key = FFvar, value = ffret)
+# convert to wide format
+stocks.returns.w <- stocks.returns %>% spread(symbol, value = month_ret)
+                    
+#
+all.ret.merge <- stocks.returns.w %>% left_join(index.returns, by = 'date') %>% 
+                 left_join(factors.returns.w, by = 'date')
+all.ret.merge
+# merge price, return, volume with symbols in the first column
+all.merge <- stocks.prices.monthly %>% bind_cols(stocks.returns) %>%
+                          left_join(index.returns, by = 'date') %>% 
+                          left_join(factors.returns.w, by = c("date" = "date")) %>% 
+                          select(-date1, -symbol1) %>% 
+                          dplyr::rename(return = month_ret, sp500 = indexret)
+all.merge 
+
+
+#==========================================================
 tickers = c('AMZN', 'GOOG', 'MSFT', 'JNJ', 'JPM')
 
 data <- new.env()
