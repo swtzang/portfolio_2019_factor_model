@@ -171,7 +171,7 @@ save(stocks.final, file="stocks.RData")
 #
 #regr_fun <- function(data){coef(lm(fb.returns ~ xlk.returns, data = timetk::tk_tbl(data, silent = TRUE)))}
 #returns_combined %>% tq_mutate(mutate_fun = rollapply, width = 12, 
-                               FUN = regr_fun, by.column = FALSE, col_rename = c('coef.0', 'coef.1'))
+#                               FUN = regr_fun, by.column = FALSE, col_rename = c('coef.0', 'coef.1'))
 
 
 #==========================================================
