@@ -8,6 +8,10 @@ library(tidyquant)
 library(dplyr)
 library(tidyverse)
 library(XLConnect)
+library(parallel)
+library(foreach)
+library(doParallel)
+library(RcppParallel)
 #
 tq_exchange_options() # find all exchanges available
 #
@@ -182,7 +186,7 @@ stock.10price <- stocks.prices.monthly.w %>%
 # Plot the underlying SPDR assets #
 ##########################################################
 nrAssets <- ncol(stock.10price)
-par(mfrow=c(rep(ceiling(sqrt(nrAssets)),2)))
+par(mfrow=c(4,3))
 res <- sapply(1:nrAssets, function(x) plot(time(stock.10price[,x]),
               coredata(stock.10price[,x]), 
               main=names(stock.10price)[x],type="l",
@@ -237,3 +241,113 @@ GMVOptimization <- function(returns, covariance.f="CovClassic", longOnly=FALSE, 
                   bvec=bvec, meq=1) # meq = 1 equality constraint
   return(gmv$solution)
 }
+
+#----
+# In this section we perform an out of sample backtest of the GMV portfolio strategy that 
+# was implemented in the section above. The goal here is to first obtain the GMV weights 
+# for the available historical timestamps and subsequently compare the resulting portfolio 
+# allocations with the actual next-day realized returns of the assets. 
+# The out of sample results can then be plotted and analyzed. Furthermore, we also need to 
+# define an additional lookback setting to indicate how much historical data we want to use 
+# for our covariance matrix calculation. It is important to note that we can only look at the 
+# data that is already available to us on any given timestamp in order to avoid any potential 
+# data-snooping bias.
+
+# The backtest function is added in the code snippet below. Note that the procedure uses 
+# the foreach package to run the optimizations in parallel across multiple CPU’s:
+
+###########################################################################
+### Perform Global Minimum Variance backtest                           #####
+############################################################################
+GMVPortfolioBacktest <- function(returns=NULL, assets=NULL, 
+                                 lookback=120, 
+                                 longOnly=FALSE,
+                                 covariance.f="CovClassic", 
+                                 max.weight=1,
+                                 nrCores=detectCores(), 
+                                 plot=TRUE, strategyName="Strategy")
+{
+  if(is.null(returns))
+    returns <- na.omit((assets / lag(assets, k= 1) - 1) * 100)
+  
+  nrAssets <- ncol(returns)
+  # Problem: makeCluster() bug!!! ---- 
+  cl <- makeCluster(nrCores); registerDoParallel(cl)
+  clusterEvalQ(cl, eval(parse("config/config.R")))
+  clusterExport(cl,c("returns", "longOnly", "nrAssets",
+                     "covariance.f", "max.weight"), envir=environment())
+  # Calculate weights for out of sample timestamps
+  portfolioWeights <- foreach(index.end=lookback:nrow(returns)) %dopar%
+  {
+    index.start <- index.end-lookback+1
+    returns.lookback <- returns[index.start:index.end,]
+    
+    # Perform GMV optimization: obtain next-day weights
+    list(GMVOptimization(returns=returns.lookback, longOnly=longOnly, max.weight=max.weight))
+  }
+  stopCluster(cl)
+  
+  #############################################################
+  ###### POSTPROCESSING of Results                      #######
+  #############################################################
+  portfolioWeights <- do.call("rbind", lapply(portfolioWeights, "[[", 1))
+  # Convert to xts object
+  portfolioWeights <- xts(portfolioWeights, 
+                          order.by=index(tail(returns, nrow(portfolioWeights))))
+  
+  # Allign forecasted weights with realized returns
+  portfolioWeights <- lag(portfolioWeights,1)
+  # Remove leading NA value
+  portfolioWeights <- portfolioWeights[complete.cases(portfolioWeights)]
+  # Add column names
+  names(portfolioWeights) <- names(returns)
+  
+  # Calculate the portfolio returns of the strategy
+  portfolio.returns <- xts(rowSums(returns[index(portfolioWeights)]*portfolioWeights),
+                           order.by=index(portfolioWeights))
+  # Add returns and weights to a list
+  strategyResults <- list(portfolio.returns, portfolioWeights)
+  
+  #############################################################
+  ###### PLOTTING                                       #######
+  #############################################################
+  if(plot)
+    plotReturns(portfolio.returns, strategyName=strategyName)
+  
+  return(strategyResults)
+}
+
+#################################################################################
+############################ GMV Settings #######################################
+#################################################################################
+gmv.lookback=36
+gmv.maxWeight=0.3
+gmv.longOnly=FALSE
+gmv.estimator="CovClassic"
+nrCores = 8 # number of cores of the computer
+#################################################################################
+############################ GMV BACKTEST SPDR ##################################
+#################################################################################
+# Equal weight allocation benchmark for SPDR portfolio
+equalWeights <- xts(matrix(1/ncol(stock.10ret), nrow=nrow(stock.10ret),
+                           ncol=ncol(stock.10ret)), order.by=index(stock.10ret))
+stock.EqualWeights <- xts(rowSums(stock.10ret[index(equalWeights)]*equalWeights), 
+                         order.by=index(equalWeights))
+
+# GMV strategy for SPDR portfolio
+stock.GMV <- GMVPortfolioBacktest(returns=stock.10ret, 
+                                 max.weight=gmv.maxWeight,
+                                 covariance.f=gmv.estimator, 
+                                 lookback=gmv.lookback,
+                                 longOnly=gmv.longOnly, 
+                                 nrCores=nrCores,
+                                 plot=TRUE, strategyName="SPDR GMV")
+
+# Compare equal weight strategy with GMV strategy for SPDR portfolio
+plotReturns(returns=SPDR.EqualWeights, 
+            strategyName="SPDR Equal Weights",
+            returns.compare=SPDR.GMV[[1]], 
+            strategyName.compare="SPDR GMV")
+
+
+
