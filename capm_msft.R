@@ -39,7 +39,7 @@ diagD_hat = diag(res_var)
 diagD_hat
 # covariance matrix by single factor model
 Y = EX_R_sp500[-1,]
-cov_factor = as.numeric(var(Y))*t(b_hat)%*%b_hat + diag(diagD_hat) 
+cov_factor = as.numeric(var(Y))*t(b_hat)%*%b_hat + diagD_hat 
 cov_factor
 #---------------------------------------------------------------------------
 # You can also use OLS formula: beta=inv(X'X)X'Y to get the estimated beta
@@ -54,13 +54,15 @@ b_hat.1 = solve(t(X)%*%X)%*%t(X)%*%Y
 b_hat.1
 b_hat
 
+n = dim(X)[1]
+n
 # follow the formula in the slides
 E_hat = Y - X%*%b_hat.1
-res_var.1 = diag(t(E_hat)%*%E_hat)/((n-1)-2)
+res_var.1 = diag(t(E_hat)%*%E_hat)/(n-2)
 diagD_hat.1 = diag(res_var.1)
 diagD_hat.1
 # covariance matrix by single factor model
 
-cov_factor.1 = as.numeric(var(EX_R_sp500[-1,]))*t(b_hat)%*%b_hat + diag(diagD_hat) 
+cov_factor.1 = as.numeric(var(EX_R_sp500[-1,]))*t(b_hat.1)%*%b_hat.1 + diagD_hat.1 
 cov_factor.1 
 cov_factor
