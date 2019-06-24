@@ -15,7 +15,7 @@ dat <- read_csv("capm.csv") %>%
               ford = `Close-ford`) %>% 
               # convert risk-free rate into daily returns
               mutate(rf = rf/(100*360)) 
-
+#
 glimpse(dat)
 tail(dat)
 #
@@ -28,18 +28,28 @@ ret4 <- dat %>% select(-rf) %>%
                       type       = "arithmetic",
                       col_rename = "daily.returns") %>% 
         ungroup() %>% 
-        spread(stock, daily.returns)
-ret4
+        spread(stock, daily.returns) %>% 
+        bind_cols(., rf = dat$rf) %>%
+        # subract each returns by risk-free rate
+        mutate(ford_rf = ford - rf, 
+               ge_rf   = ge - rf, 
+               msft_rf = msft - rf, 
+               sp500_rf = sp500 - rf) %>%
+       # Delete the first row with 0 data
+       slice(-1) %>%
+       select(Date, ends_with("_rf"))
+#
+ret4 %>% lm(formula = cbind(ford_rf, msft_rf, ge_rf) ~ sp500_rf, data = .)
 
 # Convert data into time series
 library(xts)
-dat.xts<-xts(dat[,2:6], order.by= as.Date(dat[,1], "%Y/%m/%d"))
+dat.xts<-xts(dat[,2:6], order.by= dat$Date)
 # Sample period
 dat.xts.sample<-dat.xts['199311/199811']
 
 # Calculate returns for three stocks and minus daily treasury bill rate
 # Daily treasury bill rate can be obtained by converting annual rate into daily rates
-riskfree<-dat.xts.sample[,1]/(100*252)
+riskfree<-dat.xts.sample[,1]/(100*360)
 EX_R_sp500 = dat.xts.sample[,2]/lag(dat.xts.sample[,2],1) - 1 - riskfree   
 EX_R_msft = dat.xts.sample[,3]/lag(dat.xts.sample[,3],1) - 1 - riskfree  
 EX_R_ge = dat.xts.sample[,4]/lag(dat.xts.sample[,4],1) - 1 - riskfree  

@@ -13,20 +13,20 @@ options(width = 70, digits=4)
 # load required packages
 library(ellipse)
 #library(fEcofin)                # various data sets
-library(PerformanceAnalytics)   # performance and risk analysis functions
-library(zoo)
+#library(PerformanceAnalytics)   # performance and risk analysis functions
+#library(zoo)
+library(tidyquant)
 library(readxl)
 library(writexl)
 library(tidyverse)
-library(reshape2)
+library(broom)
 
 ################################################################################
 # Macroeconomic Factor Models
 ################################################################################
 
-##
-## Single Index Model
-##
+
+# Single Index Model ----
 
 # load Berndt Data
 # 18 variables with 120 monthly return observations starting from 1978/01 thru 1987/12
@@ -36,23 +36,25 @@ retdata %>% glimpse()
 str(retdata)
 # create data frame with dates as rownames
 # berndt.df = retdata[, -1]
-#rownames(berndt.df) = as.character(berndtInvest[, 1])
-#colnames(berndt.df)
+# rownames(berndt.df) = as.character(berndtInvest[, 1])
+# colnames(berndt.df)
 
-##
-## use multivariate regression and matrix algebra
-##
+#
+# use multivariate regression and matrix algebra
+#
 returns.mat = as.matrix(retdata[, c(-1,-11, -18)])
+dim(returns.mat)
 market.mat = as.matrix(retdata[,11, drop=F])
 n.obs = nrow(returns.mat)
-X.mat = cbind(rep(1,n.obs),market.mat)
+X.mat = cbind(rep(1,n.obs), market.mat)
 colnames(X.mat)[1] = "intercept"
 XX.mat = crossprod(X.mat)
 
 # multivariate least squares
-G.hat = solve(XX.mat)%*%crossprod(X.mat,returns.mat)
+G.hat = solve(XX.mat)%*%crossprod(X.mat, returns.mat)
 # can also use solve(qr(X.mat), returns.mat)
 beta.hat = G.hat[2,]
+beta.hat
 E.hat = returns.mat - X.mat%*%G.hat
 diagD.hat = diag(crossprod(E.hat)/(n.obs-2))
 # compute R2 values from multivariate regression
@@ -69,7 +71,8 @@ par(mfrow=c(1,1))
 
 # compute single index model covariance/correlation matrices
 cov.si = as.numeric(var(market.mat))*beta.hat%*%t(beta.hat) + diag(diagD.hat)
-cor.si = cov2cor(cov.si)
+cor.si <- cov.si %>% cov2cor() 
+          
 # plot correlations using plotcorr() from ellipse package
 rownames(cor.si) = colnames(cor.si)
 ord <- order(cor.si[1,])
@@ -87,8 +90,8 @@ colnames(w.gmin.sample) = "sample"
 cbind(w.gmin.si, sample = w.gmin.sample)
 
 par(mfrow=c(2,1))
-barplot(t(w.gmin.si), horiz=F, main="Single Index Weights", col="blue", cex.names = 0.75, las=2)
-barplot(t(w.gmin.sample), horiz=F, main="Sample Weights", col="blue", cex.names = 0.75, las=2)
+barplot(t(w.gmin.si), horiz=F, main="MVP weights from single index model", col="blue", cex.names = 0.75, las=2)
+barplot(t(w.gmin.sample), horiz=F, main="MVP weights from sample covariance", col="blue", cex.names = 0.75, las=2)
 par(mfrow=c(1,1))
 
 # compare means and sd values on global min variance portfolios
@@ -105,6 +108,8 @@ cbind(mu.gmin.si,mu.gmin.sample, sd.gmin.si, sd.gmin.sample)
 
 asset.names = colnames(returns.mat)
 asset.names
+
+lm(formula = returns.mat ~ market.mat)
 
 # initialize list object to hold regression objects
 reg.list = list()
