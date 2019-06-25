@@ -39,58 +39,27 @@ ret4 <- dat %>% select(-rf) %>%
        slice(-1) %>%
        select(Date, ends_with("_rf"))
 #
-ret4 %>% lm(formula = cbind(ford_rf, msft_rf, ge_rf) ~ sp500_rf, data = .)
+ret4.reg <- ret4 %>% lm(formula = cbind(msft_rf, ge_rf, ford_rf) ~ sp500_rf, data = .)
+b_hat <- ret4.reg$coefficients
+# compute residual variance and diagonalized it
+diagD_hat <- ret4.reg$residuals %>% cov() %>% diag() %>% diag(nrow = length(.))
 
-# Convert data into time series
-library(xts)
-dat.xts<-xts(dat[,2:6], order.by= dat$Date)
-# Sample period
-dat.xts.sample<-dat.xts['199311/199811']
-
-# Calculate returns for three stocks and minus daily treasury bill rate
-# Daily treasury bill rate can be obtained by converting annual rate into daily rates
-riskfree<-dat.xts.sample[,1]/(100*360)
-EX_R_sp500 = dat.xts.sample[,2]/lag(dat.xts.sample[,2],1) - 1 - riskfree   
-EX_R_msft = dat.xts.sample[,3]/lag(dat.xts.sample[,3],1) - 1 - riskfree  
-EX_R_ge = dat.xts.sample[,4]/lag(dat.xts.sample[,4],1) - 1 - riskfree  
-EX_R_ford = dat.xts.sample[,5]/lag(dat.xts.sample[,5],1) - 1 - riskfree  
-# Delete the first row NA data
-fit1 = lm(EX_R_msft[-1,]~EX_R_sp500[-1,])
-fit2 = lm(EX_R_ge[-1,]~EX_R_sp500[-1,])
-fit3 = lm(EX_R_ford[-1,]~EX_R_sp500[-1,])
-#options(digits=3)
-summary(fit1)
-summary(fit2)
-summary(fit3)
-# Extract beta for fit1
-beta_hat<-rbind(fit1$coefficients, fit2$coefficients, fit3$coefficients)
-b_hat<-t(beta_hat)
-#degree of freedom
-n<-dim(EX_R_msft[-1,])[1]
-df = n-2
-#residual variance
-res_var  = c(sum((fit1$residuals)^2), sum((fit2$residuals)^2), sum((fit3$residuals)^2))/df
-diagD_hat = diag(res_var)
-diagD_hat
 # covariance matrix by single factor model
-Y = EX_R_sp500[-1,]
+Y = ret4$sp500_rf
 cov_factor = as.numeric(var(Y))*t(b_hat)%*%b_hat + diagD_hat 
 cov_factor
 #---------------------------------------------------------------------------
 # You can also use OLS formula: beta=inv(X'X)X'Y to get the estimated beta
 #---------------------------------------------------------------------------
-n = dim(EX_R_sp500)[1]
+n = length(Y)
 ones = rep(1,n)
-X = cbind(ones, EX_R_sp500)
-X = as.matrix(X[-1,])
-Y = cbind(EX_R_msft, EX_R_ge, EX_R_ford)
-Y = as.matrix(Y[-1,])
+X = cbind(ones, Y)
+X = as.matrix(X)
+Y = cbind(ret4$msft_rf, ret4$ge_rf, ret4$ford_rf)
 b_hat.1 = solve(t(X)%*%X)%*%t(X)%*%Y
 b_hat.1
 b_hat
 
-n = dim(X)[1]
-n
 # follow the formula in the slides
 E_hat = Y - X%*%b_hat.1
 res_var.1 = diag(t(E_hat)%*%E_hat)/(n-2)
