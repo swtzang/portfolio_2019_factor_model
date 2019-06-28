@@ -59,14 +59,56 @@ mvp.w.df %>%
 pc.fit = princomp(retdata1)
 class(pc.fit)[1] 
 names(pc.fit)
+# [1] "sdev"     "loadings" "center"   "scale"    "n.obs"    "scores"   "call" 
 summary(pc.fit)
 #
 plot(pc.fit)
+pc.fit.per <- round(pc.fit$sdev^2 / sum(pc.fit$sdev^2)*100, 1)
 loadings(pc.fit)
 #
 head(pc.fit$scores[, 1:4])
 # The following use codes from : 
 # https://www.youtube.com/watch?v=0Jp4gsfOLMs
+# Note: prcomp() expects samples (stock id) to be rows and genes (stock returns)　to be columns.
+# Since our data matrix stores stock returns by rows and stock id by columns, we need to transpose the matrix.
+rownames(retdata1) <- paste("period", 1:120, sep="")
 pca <- prcomp(t(retdata1), scale = T)
 names(pca)
 #[1] "sdev"     "rotation" "center"   "scale"    "x"
+# x contains the principal components (PCs) 
+# Since there are 15 stocks, ther are 15 PCs.
+# The first PC accounts for the most variation in the original data (the returns across all 15 stocks).
+# The 2nd PC accounts for the second most variation and so on. To plot a 2-D PCA graph, we usually use the 
+# first 2 PCs. However, sometimes we use PC2 and PC3. 
+pca$x
+plot(pca$x[,1], pca$x[,2])
+#
+# We use the square of sdev, which stands for "standard deviation", to calculate how much 
+# variation in the original data each principal component accounts for. 
+pca.var <- pca$sdev^2
+pca.var
+# The percentage of variation that each PC accounts for
+pca.var.per <- round(pca.var/sum(pca.var)*100, 1)
+
+barplot(pca.var.per, main = "Scree Plot", xlab = "Principal Component", ylab = "Percent Variation")
+#
+library(ggplot2)
+pca.data <- data.frame(stock = rownames(pca$x), 
+                       X = pca$x[,1], 
+                       Y = pca$x[,2])
+pca.data
+#
+ggplot(data = pca.data, aes(x = X, y =Y, label = stock)) + 
+  geom_text()+
+  xlab(paste("PC1 - ", pca.var.per[1], "%", sep = "")) + 
+  ylab(paste("PC2 - ", pca.var.per[2], "%", sep = "")) +
+  theme_bw() +
+  ggtitle("My PCA Graph")
+#
+loading_scores <- pca$rotation[,1]
+return_scores <- abs(loading_scores)
+return_score_ranked <- sort(return_scores, decreasing = TRUE)
+top_20_returns <- names(return_score_ranked[1:20])
+
+
+
