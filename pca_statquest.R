@@ -139,3 +139,6 @@ ggplot(data=eigen.data, aes(x=X, y=Y, label=Sample)) +
   ylab(paste("PC2 - ", eigen.var.per[2], "%", sep="")) +
   theme_bw() +
   ggtitle("eigen on cov(t(data.matrix))")
+
+
+
