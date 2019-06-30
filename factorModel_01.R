@@ -1,3 +1,4 @@
+#
 # econ589factorModels.r
 # Examples for factor model risk lecture
 # author: Eric Zivot
@@ -6,6 +7,9 @@
 #
 # comments: Examples follow chapter 11 in Zivot and Wang (2006), Modeling Financial
 # Time Series with S-PLUS.
+
+# Also reference: Financial econometrics practical, NF Katzke
+# Practical 4: PCA and EFA in R
 
 # set output options
 rm(list=ls())
