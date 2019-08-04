@@ -341,6 +341,7 @@ pca<-prcomp(returns.mat)
 evec.1<-pca$rotation[] #eigen vectors
 eval.1 <- pca$sdev^2 #eigen values
 eval.1
+evec.1%*%t(returns.mat)
 # To calculate the principal component portfolios, we will use the following formula:
 # inv(eigenvector)*t(return matrix)
 inv.evec<-solve(evec) #inverse of eigenvector
@@ -362,13 +363,17 @@ print(d.fa,digits =2, cutoff =.2, sort =TRUE)
 pc.fit = princomp(returns.mat)
 class(pc.fit)
 names(pc.fit)
+pc.fit$sdev^2
+# loadings -> eigenvectors
+# sdev^2 -> eigenvalues
+# scores -> principal component factors
 
 pc.fit
 summary(pc.fit)
 plot(pc.fit)
 loadings(pc.fit)
 pc.fit$loadings
-
+loadings(pc.fit)
 # pc factors are in the scores component. Note these scores are based on
 # centered data
 head(pc.fit$scores[, 1:4])
