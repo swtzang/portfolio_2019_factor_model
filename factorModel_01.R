@@ -325,19 +325,27 @@ returns.mat = as.matrix(berndt.df[, c(-10, -17)])
 # Principal Component Analysis ----
 # https://systematicedge.wordpress.com/2013/06/02/principal-component-analysis-in-portfolio-management/
 
+# There are like 3 different way of doing a PCA in R. 
+# I will show a foundational way and a functionalized way of doing it. 
+# Such two-step process will help see what’s going on under the hood.
+
 ## Method 1: Use prcomp() function for principal component analysis ----
 demean = scale(coredata(returns.mat), center=TRUE, scale=FALSE)
 covm<-cov(demean)
 evec<-eigen(cov(demean), symmetric=TRUE)$vector[] #eigen vectors
 eval<-eigen(cov(demean), symmetric=TRUE)$values #eigen values
 eval
-#PCA Functional
+#PCA Functional: you don't have to demean data if you use this method and 
+# you will have the same results as in method 1.
 pca<-prcomp(returns.mat)
-evec<-pca$rotation[] #eigen vectors
-eval <- pca$sdev^2 #eigen values
-#
+evec.1<-pca$rotation[] #eigen vectors
+eval.1 <- pca$sdev^2 #eigen values
+eval.1
+# To calculate the principal component portfolios, we will use the following formula:
+# inv(eigenvector)*t(return matrix)
 inv.evec<-solve(evec) #inverse of eigenvector
 pc.port<-inv.evec %*% t(returns.mat)
+dim(pc.port)
 pc.port.fc <- pc.port %>% t() %>% as.data.frame()
 # But the result is different from those from princomp()
 # cbind(pc.port.fc[,1], pc.fit$scores[,1], pc.factors.uc[,1])
@@ -398,7 +406,7 @@ cor(cbind(pc.factors.uc[,1,drop=F], berndt.df[, "MARKET",drop=F]))
 cor(cbind(-pc.factors.uc[,1,drop=F], berndt.df[, "MARKET",drop=F]))
 
 # use first eigen-vector to compue single factor (with normalization to have pos correlation with market)
-# note: cannot treat pc as a portfolio b/c weights do not sum to unity
+# note: cannot treat pc as a portfolio because weights do not sum to unity
 p1 = pc.fit$loadings[, 1]
 p1
 sum(p1)
