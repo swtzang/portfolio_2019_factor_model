@@ -18,7 +18,7 @@ options(width = 70, digits=4)
 # load required packages
 library(ellipse)
 #install.packages("fEcofin", repos="http://R-Forge.R-project.org")
-install.packages("fEcofin", repos="http://R-Forge.R-project.org")
+#install.packages("fEcofin", repos="http://R-Forge.R-project.org")
 library(fEcofin)                # various data sets
 library(PerformanceAnalytics)   # performance and risk analysis functions
 library(zoo)
@@ -337,11 +337,31 @@ eval<-eigen(cov(demean), symmetric=TRUE)$values #eigen values
 eval
 #PCA Functional: you don't have to demean data if you use this method and 
 # you will have the same results as in method 1.
+
 pca<-prcomp(returns.mat)
 evec.1<-pca$rotation[] #eigen vectors
 eval.1 <- pca$sdev^2 #eigen values
 eval.1
 evec.1%*%t(returns.mat)
+names(pca)
+# The following is referenced to:
+# https://www.datacamp.com/community/tutorials/pca-analysis-r
+# The values of each sample in terms of the principal components ($x)
+# The relationship (correlation or anticorrelation, etc) between 
+# the initial variables and the principal components ($rotation)
+library(devtools)
+install_github("vqv/ggbiplot")
+
+library(ggbiplot)
+mtcars.pca <- prcomp(mtcars[,c(1:7,10,11)], center = TRUE,scale. = TRUE)
+ggbiplot(mtcars.pca)
+
+ggbiplot(mtcars.pca, labels=rownames(mtcars))
+
+mtcars.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+
+ggbiplot(mtcars.pca,ellipse=TRUE,  labels=rownames(mtcars), groups=mtcars.country)
+
 # To calculate the principal component portfolios, we will use the following formula:
 # inv(eigenvector)*t(return matrix)
 inv.evec<-solve(evec) #inverse of eigenvector
