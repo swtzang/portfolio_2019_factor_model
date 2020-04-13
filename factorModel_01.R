@@ -105,6 +105,7 @@ barplot(t(w.gmin.si), horiz=F, main="Single Index Weights", col="blue", cex.name
 barplot(t(w.gmin.sample), horiz=F, main="Sample Weights", col="blue", cex.names = 0.75, las=2)
 par(mfrow=c(1,1))
 # barplot weights side by side
+library(tidyverse)
 cbind(w.gmin.si, w.gmin.sample) %>% 
   as_tibble(rownames = "stock") %>% 
   gather(model, weight, -stock ) %>% 
