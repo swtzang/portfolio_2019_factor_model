@@ -55,7 +55,7 @@ n.obs = nrow(returns.mat)
 X.mat = cbind(rep(1,n.obs),market.mat)
 colnames(X.mat)[1] = "intercept"
 XX.mat = crossprod(X.mat)
-
+# b^hat = (X'X)^{-1}*(X'Y)
 # multivariate least squares
 G.hat = solve(XX.mat)%*%crossprod(X.mat,returns.mat)
 # can also use solve(qr(X.mat), returns.mat)
@@ -201,7 +201,7 @@ t(reg.vals)
 
 # create loading matrix B for industry factor model
 n.stocks = ncol(returns.mat)
-tech.dum = oil.dum = other.dum = matrix(0,n.stocks,1)
+tech.dum = oil.dum = other.dum = matrix(0, n.stocks, 1)
 rownames(tech.dum) = rownames(oil.dum) = rownames(other.dum) = asset.names
 tech.dum[c(4,5,9,13),] = 1
 oil.dum[c(3,6,10,11,14),] = 1
@@ -242,6 +242,9 @@ H.hat = solve(t(B.mat)%*%Dinv.hat%*%B.mat)%*%t(B.mat)%*%Dinv.hat
 colnames(H.hat) = asset.names
 # note: rows of H sum to one so are weights in factor mimicking portfolios
 F.hat.gls = H.hat%*%returns.mat
+# compute E.hat.g
+E.hat.g <- returns.mat - B.mat%*%F.hat.gls
+diagD.hat.g <- apply(E.hat.g, 1, var)
 # show gls factor weights
 t(H.hat)
 colSums(t(H.hat))
@@ -269,8 +272,8 @@ abline(h=0)
 par(mfrow=c(1,1))
 
 # compute sample covariance matrix of estimated factors
-
-cov.ind = B.mat%*%var(t(F.hat.gls))%*%t(B.mat) + diag(diagD.hat)
+cov.ind = B.mat%*%var(t(F.hat.gls))%*%t(B.mat) + diag(diagD.hat.g)
+# cov.ind = B.mat%*%var(t(F.hat.gls))%*%t(B.mat) + diag(diagD.hat)
 cor.ind = cov2cor(cov.ind)
 # plot correlations using plotcorr() from ellipse package
 rownames(cor.ind) = colnames(cor.ind)
