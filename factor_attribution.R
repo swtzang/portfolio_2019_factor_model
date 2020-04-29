@@ -2,8 +2,11 @@
 ###############################################################################
 # Load Systematic Investor Toolbox (SIT)
 # https://systematicinvestor.wordpress.com/systematic-investor-toolbox/
+# Download Fama French factor data
+# https://www.codingfinance.com/post/2018-05-31-download-ff-data-in-r/
 ###############################################################################
 #setInternet2(TRUE)
+rm(list = ls())
 con = gzcon(url('http://www.systematicportfolio.com/sit.gz', 'rb'))
 source(con)
 close(con)
@@ -12,26 +15,54 @@ close(con)
 # Load historical data
 #****************************************************************** 
 library(pacman)
-p_load(quantmod)   
+p_load(quantmod, zoo, xts, tibble)   
 tickers = 'VISVX'
 
 data <- new.env()
 getSymbols(tickers, src = 'yahoo', from = '1980-01-01', env = data, auto.assign = T)
 dim(data$VISVX)
+# tibble::rownames_to_column(data$VISVX, "date")
+
+i = "VISVX"
 for(i in ls(data)) {
   temp = adjustOHLC(data[[i]], use.Adjusted=T)                            
   
   period.ends = endpoints(temp, 'months')
   period.ends = period.ends[period.ends > 0]
-  
+  temp.01 = as_tibble(fortify.zoo(temp))
   # reformat date to match Fama French Data
-  monthly.dates = as.Date(paste(format(index(temp)[period.ends], '%Y%m'),'01',sep=''), '%Y%m%d')
+  monthly.dates = as.Date(paste(format(temp.01$Index[period.ends], '%Y%m'),'01',sep=''), '%Y%m%d')
   data[[i]] = make.xts(coredata(temp[period.ends,]), monthly.dates)
 }
 
 # Fama/French factors
-factors = get.fama.french.data('F-F_Research_Data_Factors', periodicity = 'months',download = T, clean = F)
+# factors = get.fama.french.data('F-F_Research_Data_Factors', periodicity = 'months',download = T, clean = F)
+ff_url <- "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip"
+#
+library(tidyverse)
+# Create temp_file to store the file
+temp_file <- tempfile()
+# Download the file
+download.file(ff_url, temp_file)
+# Unzip the file, to extract the data
+ff_factors_raw_data <- unzip(temp_file)
+# Read the contents using tidyverse package
+ff_factors_raw_data <- read_csv(ff_factors_raw_data)
+# Check the data
+head(ff_factors_raw_data)
+# We need to load the file again
+ff_url <- "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip"
 
+temp_file <- tempfile()
+download.file(ff_url, temp_file)
+
+ff_factors_raw_data <- unzip(temp_file)
+
+# Skipping the first 3 rows
+
+ff_factors_raw_data <- read_csv(ff_factors_raw_data, skip = 3)
+head(ff_factors_raw_data)
+#-------------------------------------
 # add factors and align
 data$factors = factors$data / 100
 bt.prep(data, align='remove.na', dates='1994::')
@@ -56,7 +87,7 @@ estimate.all = c(fit.all$coefficients[,'Estimate'], fit.all$r.squared)
 std.error.all = c(fit.all$coefficients[,'Std. Error'], NA)
 
 #*****************************************************************
-# Facto Loadings Regression over 36 Month window
+# Factor Loadings Regression over 36 Month window
 #******************************************************************                             
 window.len = 36
 
