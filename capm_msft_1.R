@@ -3,7 +3,11 @@
 # Single factor model using capm.csv
 #########################
 rm(list=ls())
+
+library(dplyr)
+library(tidyr)
 library(tidyquant)
+library(readr)
 #setwd("D:/亞洲大學上課資料/Portfolio management 2017 Spring")
 dat <- read_csv("capm.csv") %>% 
        mutate(Date = as.character(Date) %>% as.Date(., "%Y/%m/%d")) %>% 
@@ -39,15 +43,17 @@ ret4 <- dat %>% select(-rf) %>%
        slice(-1) %>%
        select(Date, ends_with("_rf"))
 #
+head(ret4)
 ret4.reg <- ret4 %>% lm(formula = cbind(msft_rf, ge_rf, ford_rf) ~ sp500_rf, data = .)
 b_hat <- ret4.reg$coefficients
 # compute residual variance and diagonalized it
 diagD_hat <- ret4.reg$residuals %>% cov() %>% diag() %>% diag(nrow = length(.))
-
+diagD_hat
 # covariance matrix by single factor model
-Y = ret4$sp500_rf
-cov_factor = as.numeric(var(Y))*t(b_hat)%*%b_hat + diagD_hat 
-cov_factor
+# omega = sigm2 * beta' * beta
+sigm2 = var(ret4$sp500_rf)
+omega = sigm2*t(b_hat)%*%b_hat + diagD_hat 
+omega
 #---------------------------------------------------------------------------
 # You can also use OLS formula: beta=inv(X'X)X'Y to get the estimated beta
 #---------------------------------------------------------------------------
@@ -66,7 +72,7 @@ res_var.1 = diag(t(E_hat)%*%E_hat)/(n-2)
 diagD_hat.1 = diag(res_var.1)
 diagD_hat.1
 # covariance matrix by single factor model
+omega.1 = var(ret4$sp500_rf)*t(b_hat.1)%*%b_hat.1 + diagD_hat.1 
+omega.1 
+omega
 
-cov_factor.1 = as.numeric(var(EX_R_sp500[-1,]))*t(b_hat.1)%*%b_hat.1 + diagD_hat.1 
-cov_factor.1 
-cov_factor
