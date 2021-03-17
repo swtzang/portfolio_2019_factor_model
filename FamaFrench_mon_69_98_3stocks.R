@@ -5,6 +5,7 @@
 #========================================
 library(tidyverse)
 retdata = read_csv('FamaFrench_mon_69_98_3stocks.csv')
+head(retdata)
 glimpse(retdata)
 colnames(retdata)[2]<- 'Mkt_RF'# Replace 'Mkt-RF' with 'Mkt_RF'; 
 # attach(retdata)
@@ -46,8 +47,10 @@ cov_1f.1
 #===================================================================
 # Method 1: by "lm" function
 #============================
+N <- dim(retdata)[1]
 stock.rets<-retdata %>% select(c(2,3,4,6,7,8))/100
 fit3 = lm(formula = cbind(ge, ibm, mobil)~Mkt_RF + SMB + HML, data=stock.rets)
+fit3$
 sigF3 = as.matrix(var(cbind(stock.rets$Mkt_RF, 
                             stock.rets$SMB, 
                             stock.rets$HML)))
