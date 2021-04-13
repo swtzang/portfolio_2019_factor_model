@@ -1,5 +1,5 @@
 ##########################
-#  Homework 
+# Homework 
 # Single factor model using capm.csv
 #########################
 rm(list=ls())
@@ -9,6 +9,9 @@ library(tidyr)
 library(tidyquant)
 library(readr)
 #setwd("D:/亞洲大學上課資料/Portfolio management 2017 Spring")
+data <- read_csv("capm.csv")
+head(data)
+
 dat <- read_csv("capm.csv") %>% 
        mutate(Date = as.character(Date) %>% as.Date(., "%Y/%m/%d")) %>% 
        filter(Date>=as.Date("1993-11-01") & Date<= as.Date("1998-11-30")) %>% 
@@ -20,6 +23,7 @@ dat <- read_csv("capm.csv") %>%
               # convert risk-free rate into daily returns
               mutate(rf = rf/(100*360)) 
 #
+head(dat)
 glimpse(dat)
 tail(dat)
 #
@@ -45,7 +49,10 @@ ret4 <- dat %>% select(-rf) %>%
 #
 head(ret4)
 ret4.reg <- ret4 %>% lm(formula = cbind(msft_rf, ge_rf, ford_rf) ~ sp500_rf, data = .)
+head(cbind(ret4$msft_rf, ret4$ge_rf, ret4$ford_rf))
+
 b_hat <- ret4.reg$coefficients
+b_hat
 # compute residual variance and diagonalized it
 diagD_hat <- ret4.reg$residuals %>% cov() %>% diag() %>% diag(nrow = length(.))
 diagD_hat

@@ -3,7 +3,10 @@
 # Single factor model using capm.csv
 #########################
 rm(list=ls())
+library(dplyr)
+library(tidyr)
 library(tidyquant)
+library(readr)
 #setwd("D:/亞洲大學上課資料/Portfolio management 2017 Spring")
 dat <- read_csv("capm.csv") %>% 
        mutate(Date = as.character(Date) %>% as.Date(., "%Y/%m/%d")) %>% 
@@ -17,6 +20,7 @@ dat <- read_csv("capm.csv") %>%
               mutate(rf = rf/(100*360)) 
 
 glimpse(dat)
+head(dat)
 tail(dat)
 #
 
@@ -29,11 +33,12 @@ ret4 <- dat %>% select(-rf) %>%
                       col_rename = "daily.returns") %>% 
         ungroup() %>% 
         spread(stock, daily.returns)
-ret4
+head(ret4)
 
 # Convert data into time series
 library(xts)
-dat.xts<-xts(dat[,2:6], order.by= as.Date(dat[,1], "%Y/%m/%d"))
+dat.xts<-xts(dat[,2:6], order.by = dat$Date)
+head(dat.xts)
 # Sample period
 dat.xts.sample<-dat.xts['199311/199811']
 
