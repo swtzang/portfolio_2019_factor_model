@@ -42,7 +42,7 @@ sectors = sectors[data$symbolnames]
 
 # save data for later examples
 save(data, tickers, sectors, file='bt.pca.test.Rdata')
-
+bt.pca.test.data <- load("~/git/portfolio_2019/factor_model/bt.pca.test.Rdata")
 #*****************************************************************
 # Principal component analysis (PCA), for interesting discussion
 # http://machine-master.blogspot.ca/2012/08/pca-or-polluting-your-clever-analysis.html
