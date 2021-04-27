@@ -66,7 +66,9 @@ X1
 
 # continue to use Berndtdata
 # use R princomp() function for principal component analysis
-# pc.fit = princomp(retdata1, cor = TRUE)
+pc.fit = princomp(retdata1, cor = TRUE)
+pc.fit$sdev # gives root_eigen_value
+pc.fit$scores # gives X1
 #
 pc.fit = princomp(retdata1)
 class(pc.fit)[1] 
@@ -75,7 +77,13 @@ names(pc.fit)
 # [1] "sdev"     "loadings" "center"   "scale"    "n.obs"    "scores"   "call" 
 summary(pc.fit)
 #
-cov.pca <- diag(pc.fit$sdev^2)
+# cov.pca <- vcov(pc.fit$scores)
+#cov.pca <- diag(pc.fit$sdev^2)
+cov.pca
+sd.pca <- sqrt(diag(cov.pca))
+cor.pca <- cov.pca/outer(sd.pca, sd.pca)
+cor.pca
+
 #
 plot(pc.fit)
 pc.fit.per <- round(pc.fit$sdev^2 / sum(pc.fit$sdev^2)*100, 1)
