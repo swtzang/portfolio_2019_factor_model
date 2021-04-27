@@ -53,19 +53,36 @@ mvp.w.df %>%
   geom_bar(stat = "identity")
 
 # pca ----
+# https://stackoverflow.com/questions/37338278/pca-how-does-princomp-work-and-can-i-use-it-to-pick-up-variables-for-arima
+X <- retdata1
+S <- cor(X)  ## get correlation matrix S
+E <- eigen(S)  ## compute eigen decomposition of S
+root_eigen_value <- sqrt(E$values)  ## square root of eigen values
+root_eigen_value
+eigen_vector_mat <- E$vectors  ## matrix of eigen vectors
+eigen_vector_mat
+X1 <- scale(X) %*% eigen_vector_mat  ## transform original matrix
+X1
 
 # continue to use Berndtdata
 # use R princomp() function for principal component analysis
+# pc.fit = princomp(retdata1, cor = TRUE)
+#
 pc.fit = princomp(retdata1)
 class(pc.fit)[1] 
+pc.fit
 names(pc.fit)
 # [1] "sdev"     "loadings" "center"   "scale"    "n.obs"    "scores"   "call" 
 summary(pc.fit)
 #
+cov.pca <- diag(pc.fit$sdev^2)
+#
 plot(pc.fit)
 pc.fit.per <- round(pc.fit$sdev^2 / sum(pc.fit$sdev^2)*100, 1)
 loadings(pc.fit)
-#
+loadings(pc.fit)[,1] 
+#Notice that all of the estimated loadings on the ﬁrst factor are positive
+
 head(pc.fit$scores[, 1:4])
 # The following use codes from : 
 # https://www.youtube.com/watch?v=0Jp4gsfOLMs
