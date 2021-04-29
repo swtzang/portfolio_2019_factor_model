@@ -1,5 +1,5 @@
 # Multifactor Model ====
-# 
+# https://palomar.home.ece.ust.hk/MAFS6010R_lectures/Rsession_factor_models.html
 #
 rm(list=ls())
 #setwd("D:/亞洲大學上課資料/Portfolio management 2016 Fall")
@@ -76,22 +76,71 @@ pc.fit
 names(pc.fit)
 # [1] "sdev"     "loadings" "center"   "scale"    "n.obs"    "scores"   "call" 
 summary(pc.fit)
+pc.fit$sdev^2
+loadings(pc.fit)
 #
 # cov.pca <- vcov(pc.fit$scores)
 #cov.pca <- diag(pc.fit$sdev^2)
-cov.pca
-sd.pca <- sqrt(diag(cov.pca))
-cor.pca <- cov.pca/outer(sd.pca, sd.pca)
-cor.pca
 
 #
 plot(pc.fit)
 pc.fit.per <- round(pc.fit$sdev^2 / sum(pc.fit$sdev^2)*100, 1)
 loadings(pc.fit)
 loadings(pc.fit)[,1] 
-#Notice that all of the estimated loadings on the ﬁrst factor are positive
+# Notice that all of the estimated loadings on the ﬁrst factor are positive
+#library(covFactorModel)
+#factor_model <- factorModel(X, type = "S", K = K, max_iter = 10)
+#cbind(alpha = factor_model$alpha, beta = factor_model$beta)
 
 head(pc.fit$scores[, 1:4])
+# Load up package covFactorModel to compute covariance matrix using 3 pcs
+devtools::install_github("dppalomar/covFactorModel", force = T)
+library(covFactorModel)
+#factor_model <- factorModel(retdata1, type = "S", K = K, max_iter = 10)
+#cbind(alpha = factor_model$alpha, beta = factor_model$beta)
+# Statistical 3-factor model
+K <- 3
+X_trn <- retdata1
+T_trn <- dim(retdata1)[1]
+N <- dim(retdata1)[2]
+alpha <- colMeans(X_trn)
+X_trn_ <- X_trn - matrix(alpha, T_trn, N, byrow = TRUE)
+Sigma_prev <- matrix(0, N, N)
+Sigma <- (1/(T_trn-1)) * t(X_trn_) %*% X_trn_
+eigSigma <- eigen(Sigma)
+while (norm(Sigma - Sigma_prev, "F")/norm(Sigma, "F") > 1e-3) {
+  B <- eigSigma$vectors[, 1:K] %*% diag(sqrt(eigSigma$values[1:K]), K, K)
+  Psi <- diag(diag(Sigma - B %*% t(B)))
+  Sigma_prev <- Sigma
+  Sigma <- B %*% t(B) + Psi
+  eigSigma <- eigen(Sigma - Psi)
+}
+Sigma_PCA3 <- Sigma
+Sigma_PCA3
+B
+
+sd = sqrt(diag(Sigma_PCA3))
+cor.pca = Sigma_PCA3/outer(sd,sd)
+colnames(cor.pca) <- colnames(retdata1)
+rownames(cor.pca) <- colnames(retdata1)
+print(cor.pca,digits=2,width=2)
+
+# 
+# Load up factorAnalytics to compute covariance matrix using 3 pcs
+library(remotes)
+remotes::install_github("braverock/factorAnalytics")
+library(factorAnalytics)
+data(StockReturns)
+fit.pca <- fitSfm(r.M, k = 3)
+names(fit.pca)
+fit.pca$factors
+fit.pca$Omega
+
+
+
+
+
+
 # The following use codes from : 
 # https://www.youtube.com/watch?v=0Jp4gsfOLMs
 # Note: prcomp() expects samples (stock id) to be rows and genes (stock returns)　to be columns.
