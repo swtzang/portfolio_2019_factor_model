@@ -11,26 +11,56 @@ close(con)
 #*****************************************************************
 # Find Sectors for each company in DOW 30
 #****************************************************************** 
-tickers = spl('XLY,XLP,XLE,XLF,XLV,XLI,XLB,XLK,XLU')
-tickers.desc = spl('ConsumerCyclicals,ConsumerStaples,Energy,Financials,HealthCare,Industrials,Materials,Technology,Utilities')
+tickers = spl('XLC,XLY,XLP,XLE,XLF,XLRE,XLV,XLI,XLB,XLK,XLU')
+tickers.desc = spl('CommunicationServices,
+                   ConsumerDiscretionary, 
+                   ConsumerStaples,
+                   Energy,
+                   Financials,
+                   RealEstate,
+                   HealthCare,
+                   Industrials,
+                   Materials,
+                   Technology,
+                   Utilities')
+# https://www.sectorspdr.com/sectorspdr/sector/xlc/portfolio
+
+sector.spdr.components <- function(sector.etf = 'XLE') {
+  url = paste('http://www.sectorspdr.com/sectorspdr/IDCO.Client.Spdrs.Portfolio/Export/ExportCsv?symbol=', sector.etf, sep='')
+  temp = read.csv(url, skip=1, header=TRUE, stringsAsFactors=F)
+  tickers = temp[, 'Symbol']
+  return(tickers)
+}
+
 
 sector.map = c()
+# i = 1
 for(i in 1:len(tickers)) {
   sector.map = rbind(sector.map, 
                      cbind(sector.spdr.components(tickers[i]), tickers.desc[i])
   )
 }
 colnames(sector.map) = spl('ticker,sector')
-
+dim(sector.map)
+# delete extra space from the strings 
+industry <- gsub("\\s", "", sector.map[,2])
+sector.map[,2] <- industry
+sector.map
 #*****************************************************************
 # Load historical data
 #****************************************************************** 
 load.packages('quantmod')   
-tickers = dow.jones.components()
+tickers = dow.jones.components() # this function is not working because yahoo finance webpage is no longer providing dj30 components
+# url = 'http://finance.yahoo.com/q/cp?s=^DJI+Components'
+url = 'https://www.dividendmax.com/market-index-constituents/dow-jones-30'
+txt = join(readLines(url))
+temp = extract.table.from.webpage(txt, 'Volume', has.header = T)
+temp <- temp[-nrow(temp),]
+tickers <- temp[,2]
 
 sectors = factor(sector.map[ match(tickers, sector.map[,'ticker']), 'sector'])
 names(sectors) = tickers
-
+# 
 data <- new.env()
 getSymbols(tickers, src = 'yahoo', from = '2000-01-01', env = data, auto.assign = T)
 for(i in ls(data)) data[[i]] = adjustOHLC(data[[i]], use.Adjusted=T)    
@@ -42,7 +72,7 @@ sectors = sectors[data$symbolnames]
 
 # save data for later examples
 save(data, tickers, sectors, file='bt.pca.test.Rdata')
-bt.pca.test.data <- load("~/git/portfolio_2019/factor_model/bt.pca.test.Rdata")
+bt.pca.test.data <- load("bt.pca.test.Rdata")
 #*****************************************************************
 # Principal component analysis (PCA), for interesting discussion
 # http://machine-master.blogspot.ca/2012/08/pca-or-polluting-your-clever-analysis.html
@@ -52,7 +82,7 @@ ret = prices / mlag(prices) - 1
 dim(ret)
 tail(ret,1)
 ret <- ret[-1,] 
-ret <- ret[,-8]
+ret <- ret[,-7]
 p = princomp(na.omit(ret))
 
 loadings = p$loadings[]

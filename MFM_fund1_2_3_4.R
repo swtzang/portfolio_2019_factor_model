@@ -5,7 +5,7 @@
 
 
 #==================================================================================================
-# Multiple Factor Model ¡V Building CSFB Factors
+# Multiple Factor Model ?V Building CSFB Factors
 # https://systematicinvestor.wordpress.com/2012/01/29/multiple-factor-model-fundamental-data/
 #==================================================================================================
 # To save time not to download data from web again, you can reload the data starting running the command in line 512 or
@@ -57,8 +57,8 @@ Symbol = 'NYSE:WMT'
 fund = fund.data(Symbol, 80)
 
 # save fundamental data of quarterly financial report of Walmart
-# save(fund, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/fund.Rdata')
-# load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/fund.Rdata')
+# save(fund, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/fund.Rdata')
+# load(file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/fund.Rdata')
 
 # construct date
 fund.date = date.fund.data(fund)    
@@ -80,7 +80,7 @@ barplot(EPS, main='Wal-Mart Rolling Annual Earnings per share', border=NA)
 
 #You can see a pronounced seasonality in the Quarterly EPS for Wal-Mart, the Q4 always strong and stands out. 
 #The common way to deal with seasonality in the income statement is to use rolling annual sum, i.e. sum last 4 quarters.
-#Next let¡¦s align Wal-Mart prices and EPS and plot them on the same graph.
+#Next let??s align Wal-Mart prices and EPS and plot them on the same graph.
 
 #*****************************************************************
 # Load historical data
@@ -104,7 +104,7 @@ plota2Y(y$EPS, type='l', las=1, col='red', col.axis = 'red')
 
 plota.legend('WMT(rhs),WMT.EPS(lhs)', 'blue,red', list(Cl(y),y$EPS))
 
-#Next let¡¦s repeat the above steps for all companies in the Dow Jones index.
+#Next let??s repeat the above steps for all companies in the Dow Jones index.
 #*****************************************************************
 # Load historical data
 #****************************************************************** 
@@ -136,21 +136,21 @@ for(i in tickers) {
 
 bt.prep(data, align='keep.all', dates='1995::2014')
 
-save(data, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.Rdata')
+save(data, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.Rdata')
 # save the fundamental data for future use
-save(data.fund, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
+save(data.fund, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
 
 #It takes a while to download historical fundamental data for all companies in the Dow Jones index, 
-#so I recommend saving your results with save(data.fund, file=¡¦data.fund.Rdata¡¦) command. 
-#Later on if you want to run code one more time, just load(file=¡¦data.fund.Rdata¡¦) instead of downloading all data again.
+#so I recommend saving your results with save(data.fund, file=??data.fund.Rdata??) command. 
+#Later on if you want to run code one more time, just load(file=??data.fund.Rdata??) instead of downloading all data again.
 
 ##############################################################################################
 # Reload data
-load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
-load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.Rdata')
+load(file='data.fund.Rdata')
+load(file='data.Rdata')
 ###############################################################################################
 
-#Next let¡¦s create monthly factors. 
+#Next let??s create monthly factors. 
 #EP factor = (Earnings per share) / Price. 
 #VOMO factor = Volume x Momentum.
 
@@ -186,7 +186,7 @@ next.month.ret = mlag(ret, -1)
 factors$EP = factors$EP[month.ends,]    
 factors$VOMO = factors$VOMO[month.ends,]   
 
-#Next let¡¦s run correlation analysis for EP factor. 
+#Next let??s run correlation analysis for EP factor. 
 #You can do correlation analysis for VOMO factor as a homework.
 #*****************************************************************
 # Correlation Analysis
@@ -209,12 +209,12 @@ cor.test(x1, y, use = 'complete.obs', method = 'pearson')
 
 ###########################################################################################################
 # This is the second post in the series about Multiple Factor Models. I will build on the code presented 
-#in the prior post, Multiple Factor Model ¡V Fundamental Data, and I will show how to build Fundamental factors 
+#in the prior post, Multiple Factor Model ?V Fundamental Data, and I will show how to build Fundamental factors 
 #described in the CSFB Alpha Factor Framework. For details of the CSFB Alpha Factor Framework please read 
 #CSFB Quantitative Research, Alpha Factor Framework on page 11, page 49 by P. N. Patel, S. Yao, R. Carlson, A. Banerji, J. Handelman.
 
 #The CSFB Alpha Factor Framework has both traditional Fundamental factors and industry relative Fundamental factors.
-#Let¡¦s start by getting Fundamental data that we will need to create Price/Earnings, Price/Sales, Price/Cash Flow,
+#Let??s start by getting Fundamental data that we will need to create Price/Earnings, Price/Sales, Price/Cash Flow,
 #Dividend Yield, Price/Book factors.
 
 # https://systematicinvestor.wordpress.com/2012/02/04/multiple-factor-model-building-fundamental-factors/
@@ -244,10 +244,10 @@ sectors = factor(sector.map[ match(tickers, sector.map[,'ticker']), 'sector'])
 names(sectors) = tickers
 
 # get fundamental data
-#load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
+#load(file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
 
 # get pricing data
-#load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.Rdata')
+#load(file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.Rdata')
 
 #*****************************************************************
 # Combine fundamental and pricing data
@@ -295,7 +295,7 @@ factors = list()
 #really measurable for financial firms. Please read Valuing Financial Service Firms by A. Damodaran for 
 #detailed explanation why Sales and Cash Flow are not really measurable for financial firms.
 
-#Next let¡¦s create Traditional Value factors: Price/Earnings, Price/Sales, Price/Cash Flow, Dividend Yield, Price/Book.
+#Next let??s create Traditional Value factors: Price/Earnings, Price/Sales, Price/Cash Flow, Dividend Yield, Price/Book.
 
 #*****************************************************************
 # Traditional Value
@@ -352,10 +352,10 @@ for(j in 1:len(factors)) {
 }
 
 # save Traditional Value factor (not normalized yet)
-save(factors, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/factors.TV.Rdata')
+save(factors, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/factors.TV.Rdata')
 
 
-# To create an overall Traditional Value factor, let¡¦s first normalize (convert to z scores) 
+# To create an overall Traditional Value factor, let??s first normalize (convert to z scores) 
 # all Traditional Value factors by subtracting capitalization weighted average and dividing by standard deviation. 
 # The overall Traditional Value factor is an average of all normalized Traditional Value factors.
 
@@ -392,7 +392,7 @@ sapply(1:len(factors$TV), function(i)
 #There is tendency of quantile 5 (Q5) to outperform quantile 1 (Q1) in most cases. 
 #The relationship between quantiles is not perfect, but the spread between Q5-Q1 is positive.
 
-#Next let¡¦s examine quantiles for the overall Traditional Value factor in more details.
+#Next let??s examine quantiles for the overall Traditional Value factor in more details.
 
 #*****************************************************************
 # Backtest quantiles and quantile spread
@@ -425,18 +425,18 @@ out = compute.quantiles(factors$TV$AVG, next.month.ret, plot=F)
 #   print(paste("Workbook", file, "has", nobjects, "worksheets."))
 # }
 # 
-# save.xlsx('D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/out.xlsx',
+# save.xlsx('D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/out.xlsx',
 #           out$quantiles, out$weights, out$ranking, out$hist.factor.quantiles, out$hist.ret.quantiles)
 #########################################################################################################
 
-#write.zoo(factors$TV$AVG, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/factors_TV_AVG.csv', index.name="Date", sep=',')
-#write.zoo(next.month.ret, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/next_month_ret.csv',index.name="Date", sep=',')
-#write.zoo(out$quantiles, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/out_quantiles.csv',index.name="Date", sep=',')
-#write.csv(out$quantiles, 'D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/out_quantiles.csv')
-# write.csv(out$weights, 'D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/out_weights.csv')
-# write.csv(out$ranking, 'D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/out_ranking.csv')
-# write.csv(out$hist.factor.quantiles, 'D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/out_hist_fact_quantiles.csv')
-# write.csv(out$hist.ret.quantiles, 'D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/out_hist_ret_quantiles.csv')
+#write.zoo(factors$TV$AVG, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/factors_TV_AVG.csv', index.name="Date", sep=',')
+#write.zoo(next.month.ret, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/next_month_ret.csv',index.name="Date", sep=',')
+#write.zoo(out$quantiles, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/out_quantiles.csv',index.name="Date", sep=',')
+#write.csv(out$quantiles, 'D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/out_quantiles.csv')
+# write.csv(out$weights, 'D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/out_weights.csv')
+# write.csv(out$ranking, 'D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/out_ranking.csv')
+# write.csv(out$hist.factor.quantiles, 'D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/out_hist_fact_quantiles.csv')
+# write.csv(out$hist.ret.quantiles, 'D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/out_hist_ret_quantiles.csv')
 
 
 prices = data$prices
@@ -470,9 +470,9 @@ plotbt(models, plotX = T, log = 'y', LeftMargin = 3)
 mtext('Cumulative Performance', side = 2, line = 1)
 
 
-save(data, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.Rdata')
+save(data, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.Rdata')
 # save the fundamental data for future use
-save(data.fund, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
+save(data.fund, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
 
 
 #The quantile spread Q5-Q1 shows consistent positive performance after 2000, but is inverted from 1995 to 2000. 
@@ -482,7 +482,7 @@ save(data.fund, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/dat
 #In the next posts, I will show how to run pooled cross sectional regression to create alpha scores.
 #############################################################################################################################
 #This is the third post in the series about Multiple Factor Models. 
-#I will build on the code presented in the prior post, Multiple Factor Model ¡V Building Fundamental Factors, 
+#I will build on the code presented in the prior post, Multiple Factor Model ?V Building Fundamental Factors, 
 #and I will show how to build majority of factors described in the CSFB Alpha Factor Framework. For details of the CSFB Alpha Factor Framework please read CSFB Quantitative Research, Alpha Factor Framework on page 11, page 49 by P. N. Patel, S. Yao, R. Carlson, A. Banerji, J. Handelman.
 #This post will include long sections of code to extract/format data and build factors. 
 #I created a few helper functions for data manipulations and visualizations in the factor.model.r at github. 
@@ -523,10 +523,10 @@ sectors = factor(sector.map[ match(tickers, sector.map[,'ticker']), 'sector'])
 names(sectors) = tickers
 
 # get fundamental data
-load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
+load(file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.fund.Rdata')
 
 # get pricing data
-load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.Rdata')
+load(file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.Rdata')
 
 #*****************************************************************
 # Combine fundamental and pricing data
@@ -635,7 +635,7 @@ bt.prep(data, align='keep.all', dates='1995::2014')
 
 # save 30 stocks data into different files
 for(i in tickers) {
-  filename1 = paste("D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/", i, sep="")
+  filename1 = paste("D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/", i, sep="")
   filename2 = paste(filename1, ".csv", sep="")
     write.csv(as.data.frame(data[[i]]), file =filename2)
 }
@@ -654,7 +654,7 @@ factors = list()
 factor.names = list()   
 
 ################################################
-#Next let¡¦s create majority of CSFB factors.
+#Next let??s create majority of CSFB factors.
 ################################################
 
 #*****************************************************************
@@ -872,7 +872,7 @@ for(i in spl('RS,SA')) {
   factors$PT[[paste('r',i,sep='')]] = factors$PT[[i]] / sector.mean(factors$PT[[i]], sectors)
 }           
 
-#Next let¡¦s create Composite Average factor and chart its performance.
+#Next let??s create Composite Average factor and chart its performance.
 
 
 #*****************************************************************
@@ -905,7 +905,7 @@ plot.quantiles(factors.avg, next.month.ret, 'Average')
 plot.bt.quantiles(factors.avg$AVG, next.month.ret, 'Composite Average', data)
 
 #########################################################################################################
-#Please note that I¡¦m using the current Dow Jones index components through out the whole history. 
+#Please note that I??m using the current Dow Jones index components through out the whole history. 
 #This is a problem because the Dow Jones index changed its composition a few times in the last 20 years. 
 #One of the signs of this bias is high spread for Small Size group of factors. It is not obvious that buying 
 #low priced stocks and selling high priced stocks should consistently make money; but it makes sense, 
@@ -919,9 +919,9 @@ plot.bt.quantiles(factors.avg$AVG, next.month.ret, 'Composite Average', data)
 #*****************************************************************
 # Save CSFB factors to be used later to create multiple factor Risk Model
 #****************************************************************** 
-save(data, sectors, factors.avg, next.month.ret, file="D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.factors.Rdata")
+save(data, sectors, factors.avg, next.month.ret, file="D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.factors.Rdata")
 # remove Composite Average factor
-# load("D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.factors.Rdata")
+# load("D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.factors.Rdata")
 factors.avg = factors.avg[which(names(factors.avg) != 'AVG')]
 
 #*****************************************************************
@@ -932,7 +932,7 @@ n = ncol(next.month.ret)
 
 #factors.avg1 = factors.avg
 #factors.avg1$Ret = next.month.ret
-#filename = 'D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/factors_'
+#filename = 'D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/factors_'
 
 # for (i in 1:length(ls(factors.avg1))){
 #   filename1 = paste(filename, names(factors.avg1)[i], sep='')
@@ -959,8 +959,8 @@ dimnames(all.data)[[3]][1] = 'Ret'
 # all.data = 240*30*8; 240 dates by 30 companies by 8 factor returns; 
 
 # save array all.data 
-#save(all.data, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/all.data.Rdata')
-#load(file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/all.data.Rdata')
+#save(all.data, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/all.data.Rdata')
+#load(file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/all.data.Rdata')
 
 # estimate betas (factor returns)
 #t=1
@@ -989,7 +989,7 @@ for(t in 26:(nperiods-1)) {
 #****************************************************************** 
 setEPS()
 layout(1:2)
-postscript("D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/alpha_1.eps", horizontal = FALSE, onefile = FALSE, paper = "special",
+postscript("D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/alpha_1.eps", horizontal = FALSE, onefile = FALSE, paper = "special",
            colormodel = "rgb") 
 temp = compute.quantiles(alpha, next.month.ret, plot=T)
 
@@ -1005,7 +1005,7 @@ dev.off()
 #of the regression model.
 
 #We do not restrict estimated factor loadings during regression; however, a negative coefficient for a Value factor 
-#does not make sense. I don¡¦t want explicitly say that good Value companies should have lower ranks than bad Value 
+#does not make sense. I don??t want explicitly say that good Value companies should have lower ranks than bad Value 
 #companies, just because there is a negative coefficient for a Value factor. One possible solution is to only use 
 #factor loadings that are positive to construct Alpha score. Here is the modified code:
 
@@ -1018,7 +1018,7 @@ for(t in 26:(nperiods-1)) {
 
 setEPS()
 layout(1:2)
-postscript("D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/alpha_1.eps", horizontal = FALSE, onefile = FALSE, paper = "special",
+postscript("D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/alpha_1.eps", horizontal = FALSE, onefile = FALSE, paper = "special",
            colormodel = "rgb") 
 temp = compute.quantiles(alpha, next.month.ret, plot=T)
 
@@ -1028,7 +1028,7 @@ dev.off()
 
 ######################################################################################################################
 #This is the fourth post in the series about Multiple Factor Models. I will build on the code presented in the prior
-#post, Multiple Factor Model ¡V Building CSFB Factors, and I will show how to build a multiple factor risk model.
+#post, Multiple Factor Model ?V Building CSFB Factors, and I will show how to build a multiple factor risk model.
 #For an example of the multiple factor risk models, please read following references:
   
 # MSCI Barra United States Equity Multi-Factor Model, page 101
@@ -1040,7 +1040,7 @@ dev.off()
 # Forecast stocks specific variances using GARCH(1,1)
 # Compute portfolio risk using multiple factor model and compare it to the historical standard deviation of
 # portfolio returns.
-# Let¡¦s start by loading the CSFB factors that we saved at the end of the prior post. 
+# Let??s start by loading the CSFB factors that we saved at the end of the prior post. 
 # [If you are missing data.factors.Rdata file, please execute fm.all.factor.test() function first to create and 
 # save CSFB factors.] Next, I will run cross sectional regression to estimate factor returns.
 
@@ -1057,7 +1057,7 @@ close(con)
 #****************************************************************** 
 load.packages('quantmod,abind') 
 
-load("D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/data.factors.Rdata")
+load("D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/data.factors.Rdata")
 # remove Composite Average factor
 factors.avg = factors.avg[which(names(factors.avg) != 'AVG')]  
 
@@ -1161,7 +1161,7 @@ temp[] = apply(coredata(temp), 2, function(x) cumprod(1 + ifna(x,0)))
 
 fm.hist.plot(temp[,-c(1:nsectors)], 'Factor Returns')
 
-#Next let¡¦s estimate the factor covariance matrix over the rolling 24 month window.
+#Next let??s estimate the factor covariance matrix over the rolling 24 month window.
 
 load.packages('BurStFin')   
 factor.covariance = array(double(), c(nperiods, nfactors, nfactors))
@@ -1174,7 +1174,7 @@ for(t in 44:nperiods) {
   factor.covariance[t,,] = var.shrink.eqcor(beta[(t-23):t,])
 }
 
-#Next let¡¦s forecast stocks specific variances using GARCH(1,1). I will use the GARCH estimation routine described 
+#Next let??s forecast stocks specific variances using GARCH(1,1). I will use the GARCH estimation routine described 
 #in the Trading using Garch Volatility Forecast post.
 
 #*****************************************************************
@@ -1198,7 +1198,7 @@ specific.variance[] = ifna(coredata(specific.variance), coredata(hist.specific.v
 #*****************************************************************
 # Save multiple factor risk model to be used later during portfolio construction
 #****************************************************************** 
-save(all.data, factor.covariance, specific.variance, file='D:/¨È¬w¤j¾Ç¤W½Ò¸ê®Æ/Portfolio management 2015 Fall/MFM/risk.model.Rdata')
+save(all.data, factor.covariance, specific.variance, file='D:/?È¬w?j?Ç¤W?Ò¸???/Portfolio management 2015 Fall/MFM/risk.model.Rdata')
 
 #Portfolio Risk = (common factor variance + specific variance)^0.5
 #common factor variance = (portfolio factor exposure) * factor covariance matrix * (portfolio factor exposure)'
@@ -1220,7 +1220,7 @@ for(t in 36:(nperiods-1)) {
   )
 }
 
-#Next let¡¦s compare portfolio risk estimated using multiple factor risk model with portfolio historical risk.
+#Next let??s compare portfolio risk estimated using multiple factor risk model with portfolio historical risk.
 #*****************************************************************
 # Compute historical portfolio risk
 #****************************************************************** 
